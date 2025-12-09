@@ -15,17 +15,22 @@ BO2_genetic_algorithm/
 # GIT CHEAT SHEET
 
 # Open cmd
-1. That's easy xD but remember that you cannot for example D:/Admin/test, but:
+1. That's easy xD but remember that you cannot for example D:/Admin/test, but
    ```
-   > D
-   > cd\Admin\test
+   D
+   cd\Admin\test
+   ```
+
+# Load changes made by other people
+   ```
+   git pull origin
    ```
 
 # Initial cloning
 1. Go to the desired directory, for example D:/Admin/test
 2. Clone the repository
    ```
-   > git clone https://github.com/frslus/BO2_genetic_algorithm
+   git clone https://github.com/frslus/BO2_genetic_algorithm
    ```
 
 # Adding new branch
@@ -65,6 +70,35 @@ BO2_genetic_algorithm/
    ```
    git restore --staged <file>
    ```
+3. Commit changes locally
+   ```
+   git commit -m "<description>
+   ```
+4. Push local changes into remote repository
+   ```
+   git push origin <branch>
+   ```
 
-#TODO finish cheat sheet
+# Merging branches
+1. Check branch from the one you use (for example "test") to the one you want to keep (for example "main")
+   ```
+   git checkout main
+   ```
+2. Merge branches
+   ```
+   git merge test
+   ```
+3. Load changes into remote repository
+   ```
+   git push origin main
+   ```
+4. Delete unnecessary branch remotely
+   ```
+   git push -d origin test
+   ```
+5. Delete branch locally
+   ```
+   git branch -d test
+   ```
+
    
