@@ -2,6 +2,7 @@ from src.file_handling import *
 from src.generate_graphs import *
 from src.organisms_and_population import *
 
+
 def main():
     graph = create_complete_graph(extended_output=False)
     # print(graph[0])
@@ -23,24 +24,29 @@ def main():
     g7 = Gene("xD5", 22, "train")
     gx = g1
     g1.mode_of_transit = "plane"
-    print(g1.mode_of_transit)
+    # print(g1.mode_of_transit)
     ch1 = Chromosome([g1, g2, g3])
     # for elem in ch1:
     # print(elem)
     # print(ch1[0])
     # ch1[0] = g2
-    print(ch1)
+    # print(ch1)
     ch1[0] = g4
-    print(ch1)
-    ch1.insert(0,g1)
-    print(ch1)
+    # print(ch1)
+    ch1.insert(0, g1)
+    # print(ch1)
     ch1.append(g6)
-    print(ch1)
+    # print(ch1)
     ch1.pop(1)
-    print(ch1)
+    # print(ch1)
     ch1[0].date = 50
-    print(ch1)
-    gen1 = Genotype([ch1, ch1])
+    # print(ch1)
+    gen1 = Genotype([deepcopy(ch1), deepcopy(ch1)])
+    org1 = Organism(gen1, graph)
+    print(org1)
+    org1.mutate(MutationType.TRANSIT_MODE)
+    print(org1)
+
 
 
 if __name__ == '__main__':

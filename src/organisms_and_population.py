@@ -1,5 +1,8 @@
 from enum import Enum
 from copy import deepcopy
+from random import randint
+
+from networkx.classes import MultiGraph
 
 
 class TransitMode(Enum):
@@ -8,10 +11,24 @@ class TransitMode(Enum):
     TRAIN = "train"
 
 
+class CrossingType(Enum):
+    ONE_CUT = "cut"
+    RANDOM_SELECTION = "random"
+
+
+class MutationType(Enum):
+    CITY = "city"
+    DATE = "date"
+    TRANSIT_MODE = "transit_mode"
+    NEW_GENE = "new_gene"
+    DELETE_GENE = "delete_gene"
+
+
 class Gene:
     """
     Represents one transit of one load.
     """
+
     def __init__(self, city_to: str, date: int, mode_of_transit: TransitMode | str):
         self.city_to = city_to
         self.date = date
@@ -35,7 +52,9 @@ class Gene:
         object.__setattr__(self, name, value)
 
     def __repr__(self):
-        return f"({self.city_to}, {self.date}, {self.mode_of_transit})"
+        mode_of_transit = {TransitMode.PLANE: "plane", TransitMode.CAR: "car", TransitMode.TRAIN: "train"}[
+            self.mode_of_transit]
+        return f"({self.city_to}, {self.date}, {mode_of_transit})"
 
     def __eq__(self, other):
         return self.city_to == other.city_to and self.date == other.date and self.mode_of_transit == other.mode_of_transit
@@ -45,6 +64,7 @@ class Chromosome:
     """
     Represents all transits of one load.
     """
+
     def __init__(self, genes: list[Gene]):
         if len(genes) == 0:
             raise Exception("Chromosome cannot be empty")
@@ -110,6 +130,7 @@ class Genotype:
     """
     Represents all transits included in the solution.
     """
+
     def __init__(self, chromosomes: list[Chromosome]):
         if not all([isinstance(x, Chromosome) for x in chromosomes]):
             raise TypeError(f"All chromosomes must be of type {Chromosome}")
@@ -127,12 +148,70 @@ class Genotype:
     def __len__(self):
         return len(self.__chromosomes)
 
+    def __repr__(self):
+        result = "{"
+        for chromosome in self.__chromosomes[:-1]:
+            result += f"{chromosome},\n"
+        return result + f"{self.__chromosomes[-1]}" + "}"
+
 
 class Organism:
     """
     Represents one specific solution.
     """
-    def __init__(self, genotype: Genotype):
+
+    def __init__(self, genotype: Genotype, problem: MultiGraph):
+        if not isinstance(problem, MultiGraph):
+            raise TypeError(f"Problem must be type of {MultiGraph}, not {type(problem)}")
         if not isinstance(genotype, Genotype):
             raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
         self.__genotype = genotype
+        self.__problem = problem
+
+    def __len__(self):
+        return len(self.__genotype)
+
+    def __repr__(self):
+        return str(self.__genotype)
+
+    def crossover(self, other, crossing_type: CrossingType):
+        problem_size = len(self)
+        match crossing_type:
+            case CrossingType.ONE_CUT:
+                cut = randint(0, problem_size)
+                new_genotype = deepcopy(self.__genotype)[:cut] + deepcopy(other.__genotype)[cut:]
+                return Organism(new_genotype)
+            case CrossingType.RANDOM_SELECTION:
+                pattern = [randint(0, 1) for _ in range(problem_size)]
+                new_genotype = []
+                for i in range(problem_size):
+                    if pattern[i] == 0:
+                        new_genotype.append(deepcopy(self.__genotype[i]))
+                    else:
+                        new_genotype.append(deepcopy(other.__genotype[i]))
+        raise TypeError(f"'{crossing_type}' is not correct crossover type")
+
+    def mutate(self, mutation_type: MutationType):
+        problem_size = len(self)
+        chromosome = randint(0, problem_size - 1)
+        gene = randint(0, len(self.__genotype[chromosome]) - 1)
+        match mutation_type:
+            case MutationType.CITY:
+                cities = list(self.__problem.nodes)
+                cities.remove(self.__genotype[chromosome][gene].city_to)
+                new_city = cities[randint(0, len(cities) - 1)]
+                self.__genotype[chromosome][gene].city_to = new_city
+                return
+            case MutationType.DATE:
+                pass
+            case MutationType.TRANSIT_MODE:
+                modes = [TransitMode.CAR, TransitMode.PLANE, TransitMode.TRAIN]
+                modes.remove(self.__genotype[chromosome][gene].mode_of_transit)
+                mode_of_transit = modes[randint(0, 1)]
+                self.__genotype[chromosome][gene].mode_of_transit = mode_of_transit
+                return
+            case MutationType.NEW_GENE:
+                pass
+            case MutationType.DELETE_GENE:
+                pass
+        raise ValueError(f"{mutation_type} is not correct type of mutation")
