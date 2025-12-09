@@ -1,0 +1,138 @@
+from enum import Enum
+from copy import deepcopy
+
+
+class TransitMode(Enum):
+    PLANE = "plane"
+    CAR = "car"
+    TRAIN = "train"
+
+
+class Gene:
+    """
+    Represents one transit of one load.
+    """
+    def __init__(self, city_to: str, date: int, mode_of_transit: TransitMode | str):
+        self.city_to = city_to
+        self.date = date
+        self.mode_of_transit = TransitMode(mode_of_transit)
+
+    def __setattr__(self, name, value):
+        match name:
+            case "city_to":
+                if type(value) != str:
+                    raise TypeError(f"Attribute {name} must be {str}")
+            case "date":
+                if type(value) != int:
+                    raise TypeError(f"Attribute {name} must be {int}")
+                if value < 0:
+                    raise ValueError(f"Attribute {name} must be >= 0")
+            case "mode_of_transit":
+                if type(value) != TransitMode and type(value) != str:
+                    raise TypeError(f"Attribute {name} must be {TransitMode} or {str}")
+                if type(value) == str:
+                    value = TransitMode(value)
+        object.__setattr__(self, name, value)
+
+    def __repr__(self):
+        return f"({self.city_to}, {self.date}, {self.mode_of_transit})"
+
+    def __eq__(self, other):
+        return self.city_to == other.city_to and self.date == other.date and self.mode_of_transit == other.mode_of_transit
+
+
+class Chromosome:
+    """
+    Represents all transits of one load.
+    """
+    def __init__(self, genes: list[Gene]):
+        if len(genes) == 0:
+            raise Exception("Chromosome cannot be empty")
+        if not all([isinstance(x, Gene) for x in genes]):
+            raise TypeError(f"All genes must be of type {Gene}")
+        for i in range(1, len(genes)):
+            if genes[i].date <= genes[i - 1].date:
+                raise ValueError(f"Transits are not in chronological order: {genes[i - 1]}, {genes[i]}")
+        self.__genes = [Gene(gene.city_to, gene.date, gene.mode_of_transit) for gene in genes]
+
+    def __iter__(self):
+        return iter(self.__genes)
+
+    def __getitem__(self, index):
+        return self.__genes[index]
+
+    def __setitem__(self, index, value):
+        if not isinstance(value, Gene):
+            raise TypeError(f"All genes must be of type {Gene}")
+        if index < 0 or index >= len(self):
+            raise KeyError(f"Index {index} out of range, length of chromosome: {len(self)}")
+        if index > 0 and self.__genes[index - 1].date >= value.date:
+            raise ValueError(f"New value ({value.date}) must be > {self.__genes[index - 1].date}")
+        if index < len(self) - 1 and self.__genes[index + 1].date <= value.date:
+            raise ValueError(f"New value ({value.date}) must be < {self.__genes[index + 1].date}")
+        self.__genes[index] = value
+
+    def __len__(self):
+        return len(self.__genes)
+
+    def __contains__(self, gene):
+        return gene in self.__genes
+
+    def __repr__(self):
+        result = ""
+        for gene in self.__genes:
+            result += f" {gene},\n"
+        return f"[{result[1:-2]}]"
+
+    def insert(self, index, value):
+        if not isinstance(value, Gene):
+            raise TypeError(f"All genes must be of type {Gene}")
+        if index < 0 or index > len(self):
+            raise KeyError(f"Index {index} out of range, length of chromosome: {len(self)}")
+        if index > 0 and self.__genes[index - 1].date >= value.date:
+            raise ValueError(f"New value ({value.date}) must be > {self.__genes[index - 1].date}")
+        if index < len(self) and self.__genes[index].date <= value.date:
+            raise ValueError(f"New value ({value.date}) must be < {self.__genes[index].date}")
+        self.__genes.insert(index, value)
+
+    def pop(self, index):
+        if len(self) == 1:
+            raise Exception("Chromosome cannot be empty")
+        if index < 0 or index >= len(self):
+            raise KeyError(f"Index {index} out of range, length of chromosome: {len(self)}")
+        self.__genes.pop(index)
+
+    def append(self, value):
+        self.__genes.insert(len(self), value)
+
+
+class Genotype:
+    """
+    Represents all transits included in the solution.
+    """
+    def __init__(self, chromosomes: list[Chromosome]):
+        if not all([isinstance(x, Chromosome) for x in chromosomes]):
+            raise TypeError(f"All chromosomes must be of type {Chromosome}")
+        self.__chromosomes = deepcopy(chromosomes)
+
+    def __iter__(self):
+        return iter(self.__chromosomes)
+
+    def __getitem__(self, index):
+        return self.__chromosomes[index]
+
+    def __setitem__(self, index, value):
+        self.__chromosomes[index] = value
+
+    def __len__(self):
+        return len(self.__chromosomes)
+
+
+class Organism:
+    """
+    Represents one specific solution.
+    """
+    def __init__(self, genotype: Genotype):
+        if not isinstance(genotype, Genotype):
+            raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
+        self.__genotype = genotype
