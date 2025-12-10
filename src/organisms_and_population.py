@@ -2,7 +2,7 @@ from enum import Enum
 from copy import deepcopy
 from random import randint
 
-from networkx.classes import MultiGraph
+import networkx as nx
 
 
 class TransitMode(Enum):
@@ -22,6 +22,8 @@ class MutationType(Enum):
     TRANSIT_MODE = "transit_mode"
     NEW_GENE = "new_gene"
     DELETE_GENE = "delete_gene"
+
+type PackagesList = list[tuple[str, int, TransitMode]]
 
 
 class Gene:
@@ -160,9 +162,9 @@ class Organism:
     Represents one specific solution.
     """
 
-    def __init__(self, genotype: Genotype, problem: MultiGraph):
-        if not isinstance(problem, MultiGraph):
-            raise TypeError(f"Problem must be type of {MultiGraph}, not {type(problem)}")
+    def __init__(self, genotype: Genotype, problem: nx.MultiGraph):
+        if not isinstance(problem, nx.MultiGraph):
+            raise TypeError(f"Problem must be type of {nx.MultiGraph}, not {type(problem)}")
         if not isinstance(genotype, Genotype):
             raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
         self.__genotype = genotype

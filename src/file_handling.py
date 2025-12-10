@@ -1,8 +1,10 @@
 import csv
+from copy import deepcopy
+
 import networkx as nx
 
 
-def save_to_file(graph: nx.MultiGraph, filename: str) -> None:
+def save_graph_to_file(graph: nx.MultiGraph, filename: str) -> None:
     """
     Save graph to CSV file.
     :param graph: The graph to save.
@@ -51,7 +53,7 @@ def save_to_file(graph: nx.MultiGraph, filename: str) -> None:
                     w5.writerow(row)
 
 
-def load_from_file(filename: str) -> nx.MultiGraph:
+def load_graph_from_file(filename: str) -> nx.MultiGraph:
     """
     Load graph from CSV file.
     :param filename: The path to the file where the graph is saved.
@@ -83,3 +85,32 @@ def load_from_file(filename: str) -> nx.MultiGraph:
                         graph.add_edge(city_from, city_to, key=layer)
                         graph[city_from][city_to][layer][param] = p_type(row[j + 1])
     return graph
+
+def save_list_to_file(packages_list: list, filename: str) -> None:
+    packages_list = deepcopy(packages_list)
+    labels = ["number", "city_from", "city_to", "date_ready", "date_delivery", "weight"]
+    packages_number = len(packages_list)
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        w0 = csv.DictWriter(file, fieldnames=["packages_number"], delimiter=";")
+        w0.writeheader()
+        w0.writerow({"packages_number": packages_number})
+
+        w1 = csv.DictWriter(file, fieldnames=labels, delimiter=";")
+        w1.writeheader()
+        for i, package in enumerate(packages_list, start=1):
+            package["number"] = i
+            w1.writerow(package)
+
+def load_list_from_file(filename: str) -> list[dict]:
+    result = []
+    labels = [("city_from", str), ("city_to", str), ("date_ready", int), ("date_delivery", int), ("weight", int)]
+    with open(filename, mode="r", encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter=";")
+        next(reader)
+        packages_number = int(next(reader)[0])
+        next(reader)
+        for _ in range(packages_number):
+            row = next(reader)
+            package = {label[0]: label[1](row[i]) for i, label in enumerate(labels, start=1)}
+            result.append(package)
+    return result

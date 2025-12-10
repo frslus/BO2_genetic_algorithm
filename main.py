@@ -10,8 +10,8 @@ def main():
     # print(graph[2])
     # print(graph[3])
     print(graph.nodes(data=True), type(graph.nodes(data=True)))  # TODO save graph and recover it from file || DONE :)
-    save_to_file(graph, "data/test1.csv")
-    new_graph = load_from_file("data/test1.csv")
+    save_graph_to_file(graph, "data/test1.csv")
+    new_graph = load_graph_from_file("data/test1.csv")
     print(new_graph.nodes(data=True))
     print(str(graph.nodes(data=True)) == str(new_graph.nodes(data=True)))
     print(str(graph.edges(data=True)) == str(new_graph.edges(data=True)))
@@ -46,7 +46,12 @@ def main():
     print(org1)
     org1.mutate(MutationType.TRANSIT_MODE)
     print(org1)
-
+    package_list = [{"city_from": "xD1", "city_to": "xD2", "date_ready": 1, "date_delivery":2, "weight": 10},
+                    {"city_from": "xD3", "city_to": "xD4", "date_ready": 3, "date_delivery":4, "weight": 20}]
+    save_list_to_file(package_list, "data/test2.csv")
+    new_list = load_list_from_file("data/test2.csv")
+    print(package_list)
+    print(new_list)
 
 
 if __name__ == '__main__':
