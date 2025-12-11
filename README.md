@@ -17,7 +17,7 @@ BO2_genetic_algorithm/
 # Open cmd
 1. That's easy xD but remember that you cannot for example D:/Admin/test, but
    ```
-   D
+   D:
    cd\Admin\test
    ```
 
