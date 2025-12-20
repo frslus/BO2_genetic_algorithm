@@ -12,6 +12,7 @@ BO2_genetic_algorithm/
 ├─ test/  →  unit tests
 └─ main.py  →  genetic algorithm code
 ```
+
 # GIT CHEAT SHEET
 
 # Open cmd
