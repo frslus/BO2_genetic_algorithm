@@ -40,6 +40,7 @@
 
 * \[ ] warstwa graficzna interfejsu (TBD)
 * \[ ] zapis i odczyt do pliku konfiguracyjnego (TBD)
+* \[ ] konfiguracja algorytmu (TBD)
 
 4\. Główny algorytm
 
