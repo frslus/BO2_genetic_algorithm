@@ -1,6 +1,9 @@
 import tkinter as tk
 from math import ceil
 from tkinter import messagebox
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+NavigationToolbar2Tk)
 
 FONT_SIZE = 20
 FONT = "Helvetica"
@@ -20,11 +23,9 @@ class GUI:
 
         # init window
         self.root = tk.Tk()
-        self.label = ""
         self.update_window_params()
 
-        self.label = tk.Label(self.root, text="Algorytm Genetyczny", font=(self.font, self.font_size1))
-        self.label.pack()
+        self.label = tk.Label()
 
         # menubar
         self.menu_bar = tk.Menu(self.root)
@@ -35,20 +36,25 @@ class GUI:
 
         self.root.config(menu=self.menu_bar)
 
-        # button
-        self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
-                                command=self.generate_solution)
-
-        # self.button.pack(anchor="ne", padx=10, pady=10)
-        self.button.place(relx=0.6, rely=0.07)
-
-        # checkbox
+        # buttons
+        self.button = tk.Button()
         self.has_iter_limit = tk.IntVar(value=1)
-        self.checkbox = tk.Checkbutton(self.root, text="Limit iteracji", font=(self.font, self.font_size2),
-                                       variable=self.has_iter_limit)
-        self.checkbox.place(relx=0.62, rely=0.15)
-        # self.checkbox.pack(anchor="ne", padx=10, side="top")
-        # self.checkbox.pack(side="right",pady=10)
+        self.checkbox = tk.Checkbutton()
+        self.update_text_elements()
+
+        #graph
+        fig = Figure(figsize=(4, 4))
+        x = [i for i in range(20)]
+        y = [(i**2 - 15*i) for i in x]
+
+        plot1 = fig.add_subplot(111)
+        plot1.plot(x,y)
+        canvas = FigureCanvasTkAgg(fig,master=self.root)
+        canvas.get_tk_widget().place(relx=0.05, rely=0.1)
+
+        # creating the Matplotlib toolbar
+        # toolbar = NavigationToolbar2Tk(canvas,self.root)
+        # toolbar.update()
 
         # close window handling
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -64,17 +70,20 @@ class GUI:
         self.root.geometry("1000x750")
         self.root.iconbitmap("../GEIcon.ico")
 
-    def update_fonts(self):
+    def update_text_elements(self):
         """
-        Update the fonts gui with updated size
+        Update all text elements of gui with current font and fontsize
         :return:
         """
+        # label
+        self.label.pack_forget()
+        self.label = tk.Label(self.root, text="Algorytm Genetyczny", font=(self.font, self.font_size1))
+        self.label.pack()
+
         # button
         self.button.place_forget()
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
                                 command=self.generate_solution)
-
-        # self.button.pack(anchor="ne", padx=10, pady=10)
         self.button.place(relx=0.6, rely=0.07)
 
         # checkbox
@@ -119,7 +128,6 @@ class GUI:
         if messagebox.askyesno(title="Zamknij",
                                message="Czy na pewno chcesz wyjść z aplikacji?\nZmiany mogą być niezapisane!"):
             self.root.destroy()
-
 
     def generate_solution(self):
         """
@@ -196,7 +204,6 @@ class GUI:
         # TODO: implement me!
         pass
 
-
     def increase_font(self):
         """
         Increase font size and update menu
@@ -204,10 +211,10 @@ class GUI:
         """
         self.font_size1 += 2
         self.font_size2_memory += 1.5
-        print(self.font_size1, self.font_size2_memory)
+        # print(self.font_size1, self.font_size2_memory)
         self.font_size2 = ceil(self.font_size2_memory)
 
-        self.update_fonts()
+        self.update_text_elements()
 
     def decrease_font(self):
         """
@@ -218,9 +225,9 @@ class GUI:
         self.font_size2_memory -= 1.5 if self.font_size2_memory > 1.5 else 0
 
         self.font_size2 = ceil(self.font_size2_memory)
-        print(self.font_size1, self.font_size2_memory, self.font_size2)
+        # print(self.font_size1, self.font_size2_memory, self.font_size2)
 
-        self.update_fonts()
+        self.update_text_elements()
 
 
 if __name__ == '__main__':
