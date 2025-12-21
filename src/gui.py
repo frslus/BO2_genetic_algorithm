@@ -39,7 +39,6 @@ class GUI:
         # checklist
         self.mutation_type = tk.IntVar(value=1)
         self.checklist = tk.Frame(self.root)
-        self.create_checklist()
 
         # graph
         self.fig = Figure(figsize=(4, 4))
@@ -47,7 +46,8 @@ class GUI:
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
-        self.place_everything()
+        #self.place_everything()
+        self.starting_screen()
         self.root.mainloop()
 
     def place_everything(self):
@@ -59,7 +59,15 @@ class GUI:
         self.create_full_menu()
         self.root.config(menu=self.menu_bar)
         self.update_text_elements()
+        self.create_checklist()
         self.update_graph()
+
+    # def move_from_start_screen(self):
+    #     """
+    #     Clear and place every element of the GUI
+    #     :return:
+    #     """
+    #     self.place_everything()
 
     def clear_everything(self):
         """
@@ -69,9 +77,13 @@ class GUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    # def starting_screen(self):
-    #     self.label = tk.Label(text="ALGORYTM GENETYCZNY")
-    #     self.button = tk.Button()
+    def starting_screen(self):
+        self.update_window_params()
+        self.label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",font=(self.font, self.font_size1))
+        self.label.pack()
+        self.button = tk.Button(self.root, text="START", command=self.place_everything)
+        self.button.place(relx=0.45, rely=0.15)
+
     def create_full_menu(self):
         """
         Create the full menu
