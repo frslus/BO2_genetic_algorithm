@@ -12,6 +12,7 @@ class GUI:
         self.root = tk.Tk()
         self.root.title("Problem transportowy PSFŚ")
         self.root.geometry("500x500")
+        self.root.iconbitmap("../GEIcon.ico")
         label = tk.Label(self.root, text="Algorytm Genetyczny", font=("Helvetica", 20))
 
         label.pack()
