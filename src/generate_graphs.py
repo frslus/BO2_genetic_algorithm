@@ -83,9 +83,7 @@ def assign_city_names(cities: list[city_params], names: list[str] = None) -> lis
     :return: A list of cities as tuple (name, x, y).
     """
     #TODO: check for duplicates
-    if names is None:
-        return [(generate_city_name(), x, y, cap) for _, x, y, cap in cities]
-    return cities
+    return [(generate_city_name(), x, y, cap) for _, x, y, cap in cities] if names is None else cities
 
 
 # basic graph generation
