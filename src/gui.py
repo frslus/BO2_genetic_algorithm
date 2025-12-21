@@ -36,6 +36,11 @@ class GUI:
         self.has_iter_limit = tk.IntVar(value=1)
         self.checkbox = tk.Checkbutton()
 
+        #checklist
+        self.mutation_type = tk.IntVar()
+        self.checklist = tk.Frame(self.root)
+        self.create_checklist()
+
         # graph
         self.fig = Figure(figsize=(4, 4))
         self.canvas = FigureCanvasTkAgg()
@@ -56,12 +61,20 @@ class GUI:
         self.update_text_elements()
         self.update_graph()
 
+    def clear_everything(self):
+        """
+        Remove every single element of GUI
+        :return:
+        """
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
     def create_full_menu(self):
         """
         Create the full menu
         :return:
         """
-        # TODO: assess if function is redundant (if menu will not be expanded)
+        # TODO: assess if function is redundant (= if menu will not be expanded)
         self.create_file_menu()
         self.create_view_menu()
 
@@ -149,9 +162,42 @@ class GUI:
         # config.json handling
         self.view_menu.add_command(label="Zapisz konfigurację", command=self.save_config)
         self.view_menu.add_command(label="Wczytaj konfigurację", command=self.load_config)
+        self.view_menu.add_command(label="TEST1", command=self.clear_everything)
+        self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
         self.menu_bar.add_cascade(menu=self.view_menu, label="Widok")
 
+    def create_checklist(self):
+        """
+        create the checklist with single answer
+        :return:
+        """
+        self.checklist.columnconfigure(0, weight=1)
+
+        check1 = tk.Radiobutton(self.checklist, text="typ 1", variable=self.mutation_type, value=1)
+        check1.grid(row=0, column=0, sticky=tk.W+tk.E)
+        check2 = tk.Radiobutton(self.checklist, text="typ 2", variable=self.mutation_type, value=2)
+        check2.grid(row=1, column=0, sticky=tk.W + tk.E)
+        check3 = tk.Radiobutton(self.checklist, text="typ 3", variable=self.mutation_type, value=3)
+        check3.grid(row=2, column=0, sticky=tk.W + tk.E)
+
+        self.checklist.place(relx=0.5, rely=0.1)
+
+    def select_mutation_type(self):
+        """
+        TEST METHOD ONLY
+        Select the type of mutation
+        :return:
+        """
+        mutation_type = self.mutation_type.get()
+
+        if mutation_type == 1:
+            print(1)
+        elif mutation_type == 2:
+            print(2)
+        elif mutation_type == 3:
+            print(3)
+            
     def close_window(self):
         """
         Handle closing via top right corner X
