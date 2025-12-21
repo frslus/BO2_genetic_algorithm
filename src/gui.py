@@ -36,8 +36,8 @@ class GUI:
         self.has_iter_limit = tk.IntVar(value=1)
         self.checkbox = tk.Checkbutton()
 
-        #checklist
-        self.mutation_type = tk.IntVar()
+        # checklist
+        self.mutation_type = tk.IntVar(value=1)
         self.checklist = tk.Frame(self.root)
         self.create_checklist()
 
@@ -69,6 +69,9 @@ class GUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+    # def starting_screen(self):
+    #     self.label = tk.Label(text="ALGORYTM GENETYCZNY")
+    #     self.button = tk.Button()
     def create_full_menu(self):
         """
         Create the full menu
@@ -135,6 +138,7 @@ class GUI:
         # load from file
         self.file_menu.add_command(label="Wczytaj miasta", command=self.load_graph)
         self.file_menu.add_command(label="Wczytaj populację", command=self.load_population)
+        self.file_menu.add_command(label="Wczytaj konfigurację", command=self.load_config)
         self.file_menu.add_separator()
 
         # randomize
@@ -145,6 +149,8 @@ class GUI:
         # save loaded
         self.file_menu.add_command(label="Zapisz miasta", command=self.save_graph)
         self.file_menu.add_command(label="Zapisz populację", command=self.save_population)
+        self.file_menu.add_command(label="Zapisz konfigurację", command=self.save_config)
+        # self.view_menu.add_separator()
 
         self.menu_bar.add_cascade(menu=self.file_menu, label="Pliki")
 
@@ -157,11 +163,7 @@ class GUI:
         self.view_menu.add_command(label="Czcionka +", command=self.increase_font)
         self.view_menu.add_command(label="Czcionka -", command=self.decrease_font)
         self.view_menu.add_command(label="Wyrównaj okno", command=self.update_window_params)
-        self.view_menu.add_separator()
 
-        # config.json handling
-        self.view_menu.add_command(label="Zapisz konfigurację", command=self.save_config)
-        self.view_menu.add_command(label="Wczytaj konfigurację", command=self.load_config)
         self.view_menu.add_command(label="TEST1", command=self.clear_everything)
         self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
@@ -174,14 +176,16 @@ class GUI:
         """
         self.checklist.columnconfigure(0, weight=1)
 
+        label = tk.Label(self.checklist, text="Typy Mutacji", font=(self.font, self.font_size2))
+        label.grid(row=0, column=0, sticky=tk.W + tk.E)
         check1 = tk.Radiobutton(self.checklist, text="typ 1", variable=self.mutation_type, value=1)
-        check1.grid(row=0, column=0, sticky=tk.W+tk.E)
+        check1.grid(row=1, column=0, sticky=tk.W + tk.E)
         check2 = tk.Radiobutton(self.checklist, text="typ 2", variable=self.mutation_type, value=2)
-        check2.grid(row=1, column=0, sticky=tk.W + tk.E)
+        check2.grid(row=2, column=0, sticky=tk.W + tk.E)
         check3 = tk.Radiobutton(self.checklist, text="typ 3", variable=self.mutation_type, value=3)
-        check3.grid(row=2, column=0, sticky=tk.W + tk.E)
+        check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
-        self.checklist.place(relx=0.5, rely=0.1)
+        self.checklist.place(relx=0.8, rely=0.3)
 
     def select_mutation_type(self):
         """
@@ -197,7 +201,7 @@ class GUI:
             print(2)
         elif mutation_type == 3:
             print(3)
-            
+
     def close_window(self):
         """
         Handle closing via top right corner X
@@ -223,64 +227,77 @@ class GUI:
         Handle loading graph from  .csv
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Załaduj miasta",
+                               message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
+            # TODO: implement me!
+            pass
 
     def load_population(self):
         """
         Handle loading initiaL population from  .csv
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Załaduj populację",
+                               message="Czy na pewno chcesz załadować populację z pliku?\nAktualnie wczytana zostanie nadpisana!"):
+            # TODO: implement me!
+            pass
 
     def generate_graph(self):
         """
         Handle generating random graph from generate_graph.create_complete_graph
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Wylosuj miasta",
+                               message="Czy na pewno chcesz wylosować graf?\nAktualnie wczytany zostanie nadpisany!"):
+            # TODO: implement me!
+            pass
 
     def generate_population(self):
         """
         Handle generating random population
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Wylosuj populację",
+                               message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
+            # TODO: implement me!
+            pass
 
     def save_graph(self):
         """
         Save currently loaded graph to .csv
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Zapisz graf", message="Czy na pewno chcesz zapisać graf do pliku"):
+            # TODO: implement me!
+            pass
 
     def save_population(self):
         """
         save currently loaded population to .csv
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Zapisz populację", message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
+            # TODO: implement me!
+            pass
 
     def save_config(self):
         """
         Save view settings config to .json
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Zapisz ustawienia", message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
+            # TODO: implement me!
+            pass
 
     def load_config(self):
         """
         Load view settings config from .json
         :return:
         """
-        # TODO: implement me!
-        pass
+        if messagebox.askyesno(title="Załaduj",
+                               message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
+            # TODO: implement me!
+            pass
 
     def increase_font(self):
         """
