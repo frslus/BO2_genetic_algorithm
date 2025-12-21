@@ -51,6 +51,7 @@ class GUI:
         :return:
         """
         self.update_window_params()
+        self.create_full_menu()
         self.root.config(menu=self.menu_bar)
         self.update_text_elements()
         self.update_graph()
