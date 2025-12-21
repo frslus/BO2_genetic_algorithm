@@ -33,9 +33,9 @@ class GUI:
 
         # checkbox
         self.has_iter_limit = tk.IntVar(value=1)
-        self.checkbox = tk.Checkbutton(self.root, text="Limit iteracji", font=("Helvetica", 16),variable=self.has_iter_limit)
+        self.checkbox = tk.Checkbutton(self.root, text="Limit iteracji", font=("Helvetica", 16),
+                                       variable=self.has_iter_limit)
         self.checkbox.pack(pady=10)
-
 
         # close window handling
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -127,8 +127,6 @@ class GUI:
         :return:
         """
         pass
-
-
 
     # TODO: turn into lambdas
     def increase_font(self):
