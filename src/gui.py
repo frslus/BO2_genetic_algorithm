@@ -11,7 +11,7 @@ class GUI:
         # init window
         self.root = tk.Tk()
         self.root.title("Problem transportowy PSFŚ")
-        self.root.geometry("500x500")
+        self.root.geometry("1000x750")
         self.root.iconbitmap("../GEIcon.ico")
         label = tk.Label(self.root, text="Algorytm Genetyczny", font=("Helvetica", 20))
 
@@ -29,13 +29,18 @@ class GUI:
         # button
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=("Helvetica", 16),
                                 command=self.generate_solution)
-        self.button.pack(pady=10)
+
+        #self.button.pack(anchor="ne", padx=10, pady=10)
+        self.button.place(relx=0.6, rely=0.07)
 
         # checkbox
         self.has_iter_limit = tk.IntVar(value=1)
         self.checkbox = tk.Checkbutton(self.root, text="Limit iteracji", font=("Helvetica", 16),
                                        variable=self.has_iter_limit)
-        self.checkbox.pack(pady=10)
+        self.checkbox.place(relx=0.62, rely=0.15)
+        #self.checkbox.pack(anchor="ne", padx=10, side="top")
+        #self.checkbox.pack(side="right",pady=10)
+
 
         # close window handling
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)
