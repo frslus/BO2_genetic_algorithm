@@ -19,7 +19,8 @@ CROSSING_SELECT_POS = {"relx": 0.85, "rely": 0.3}
 SELECTION_SELECT_POS = {"relx": 0.85, "rely": 0.5}
 MUTATION_SELECT_POS = {"relx": 0.85, "rely": 0.7}
 
-GENERATE_SOLUTION_POS = {"relx": 0.6, "rely": 0.07}
+GENERATE_SOLUTION_POS = {"relx": 0.6, "rely": 0.7}
+CHECKBOX_POS = {"relx": 0.60, "rely": 0.77}
 
 
 class GUI:
@@ -42,11 +43,8 @@ class GUI:
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.view_menu = tk.Menu(self.menu_bar, tearoff=0)
 
-        # buttons, checkboxes, text elements
-        self.label = tk.Label()
-        self.button = tk.Button()
-        self.has_iter_limit = tk.IntVar(value=1)
-        self.checkbox = tk.Checkbutton()
+        # text fields
+        self.textbox = tk.Text(self.root)
 
         # crossing type
         self.label_crossing = tk.Label()
@@ -60,12 +58,16 @@ class GUI:
 
         # mutation type
         self.label_mutation = tk.Label()
-        self.is_mutation_type1 = tk.IntVar(value=1)
-        self.is_mutation_type2 = tk.IntVar(value=1)
-        self.is_mutation_type3 = tk.IntVar(value=1)
+        self.is_mutation_type = [tk.IntVar(value=1) for _ in range(3)]
         self.checklist_mutation = tk.Frame(self.root)
 
-        # graph
+        # generate solution button
+        self.main_label = tk.Label()
+        self.button = tk.Button()
+        self.has_iter_limit = tk.IntVar(value=1)
+        self.checkbox = tk.Checkbutton()
+
+        # graphs
         self.fig_cost = Figure()
         self.canvas_cost = FigureCanvasTkAgg()
         self.fig_population = Figure()
@@ -101,9 +103,9 @@ class GUI:
 
     def starting_screen(self):
         self.update_window_params()
-        self.label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
-                              font=(self.font, self.font_size1))
-        self.label.pack()
+        self.main_label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
+                                   font=(self.font, self.font_size1))
+        self.main_label.pack()
         self.button = tk.Button(self.root, text="START", command=self.place_everything)
         self.button.place(relx=0.45, rely=0.15)
 
@@ -133,9 +135,32 @@ class GUI:
         :return:
         """
         # label
-        self.label.pack_forget()
-        self.label = tk.Label(self.root, text="Algorytm Genetyczny", font=(self.font, self.font_size1))
-        self.label.pack()
+        self.main_label.pack_forget()
+        self.main_label = tk.Label(self.root, text="Algorytm Genetyczny", font=(self.font, self.font_size1))
+        self.main_label.pack()
+
+        # textbox
+        self.textbox.place_forget()
+        self.textbox = tk.Text(self.root,height=1,width=5,font=(self.font, self.font_size1))
+        self.textbox.place(relx=0.5, rely=0.5)
+
+        # crossing checklist
+        self.label_crossing.grid_forget()
+        self.label_crossing = tk.Label(self.checklist_crossing, text="Typy krzyżowania",
+                                       font=(self.font, self.font_size2))
+        self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
+
+        # selection checklist
+        self.label_selection.grid_forget()
+        self.label_selection = tk.Label(self.checklist_selection, text="Typy selekcji",
+                                        font=(self.font, self.font_size2))
+        self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
+
+        # mutation checklist
+        self.label_mutation.grid_forget()
+        self.label_mutation = tk.Label(self.checklist_mutation, text="Typ mutacji",
+                                       font=(self.font, self.font_size2))
+        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # button
         self.button.place_forget()
@@ -147,23 +172,7 @@ class GUI:
         self.checkbox.place_forget()
         self.checkbox = tk.Checkbutton(self.root, text="Limit iteracji", font=(self.font, self.font_size2),
                                        variable=self.has_iter_limit)
-        self.checkbox.place(relx=0.62, rely=0.15)
-
-        # crossing checklist
-        self.label_crossing.grid_forget()
-        self.label_crossing = tk.Label(self.checklist_crossing, text="Typy krzyżowania", font=(self.font, self.font_size2))
-        self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
-
-        # selection checklist
-        self.label_selection.grid_forget()
-        self.label_selection = tk.Label(self.checklist_selection, text="Typy selekcji", font=(self.font, self.font_size2))
-        self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
-
-        # mutation checklist
-        self.label_mutation.grid_forget()
-        self.label_mutation = tk.Label(self.checklist_mutation, text="Typ mutacji",
-                                       font=(self.font, self.font_size2))
-        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.checkbox.place(**CHECKBOX_POS)
 
     def update_cost_graph(self, fig: Figure = None) -> None:
         """
@@ -318,7 +327,7 @@ class GUI:
         self.checklist_selection.columnconfigure(0, weight=1)
 
         self.label_selection = tk.Label(self.checklist_selection, text="Typ selekcji",
-                                       font=(self.font, self.font_size2))
+                                        font=(self.font, self.font_size2))
         self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
 
         check1 = tk.Radiobutton(self.checklist_selection, text="typ 1", variable=self.selection_type, value=1,
@@ -341,18 +350,16 @@ class GUI:
         self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
 
         check1 = tk.Checkbutton(self.checklist_mutation, text="typ 1", font=(self.font, self.font_size2),
-                                variable=self.is_mutation_type1)
+                                variable=self.is_mutation_type[0])
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
         check2 = tk.Checkbutton(self.checklist_mutation, text="typ 2", font=(self.font, self.font_size2),
-                                variable=self.is_mutation_type2)
+                                variable=self.is_mutation_type[1])
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
         check3 = tk.Checkbutton(self.checklist_mutation, text="typ 3", font=(self.font, self.font_size2),
-                                variable=self.is_mutation_type3)
+                                variable=self.is_mutation_type[2])
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
         self.checklist_mutation.place(**MUTATION_SELECT_POS)
-
-
 
     def select_mutation_type(self):
         """
