@@ -149,21 +149,21 @@ class GUI:
                                        variable=self.has_iter_limit)
         self.checkbox.place(relx=0.62, rely=0.15)
 
-        # mutation checklist
-        self.label_mutation.grid_forget()
-        self.label_mutation = tk.Label(self.checklist_crossing, text="Typ mutacji",
-                                       font=(self.font, self.font_size2))
-        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
-
         # crossing checklist
         self.label_crossing.grid_forget()
-        self.label_crossing = tk.Label(self.checklist_crossing, text="Typy Mutacji", font=(self.font, self.font_size2))
+        self.label_crossing = tk.Label(self.checklist_crossing, text="Typy krzyżowania", font=(self.font, self.font_size2))
         self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
 
-        # crossing checklist
+        # selection checklist
         self.label_selection.grid_forget()
-        self.label_selection = tk.Label(self.checklist_crossing, text="Typy Mutacji", font=(self.font, self.font_size2))
+        self.label_selection = tk.Label(self.checklist_selection, text="Typy selekcji", font=(self.font, self.font_size2))
         self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
+
+        # mutation checklist
+        self.label_mutation.grid_forget()
+        self.label_mutation = tk.Label(self.checklist_mutation, text="Typ mutacji",
+                                       font=(self.font, self.font_size2))
+        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
 
     def update_cost_graph(self, fig: Figure = None) -> None:
         """
@@ -314,6 +314,25 @@ class GUI:
 
         self.checklist_crossing.place(**CROSSING_SELECT_POS)
 
+    def create_selection_selector(self):
+        self.checklist_selection.columnconfigure(0, weight=1)
+
+        self.label_selection = tk.Label(self.checklist_selection, text="Typ selekcji",
+                                       font=(self.font, self.font_size2))
+        self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
+
+        check1 = tk.Radiobutton(self.checklist_selection, text="typ 1", variable=self.selection_type, value=1,
+                                font=(self.font, self.font_size2))
+        check1.grid(row=1, column=0, sticky=tk.W + tk.E)
+        check2 = tk.Radiobutton(self.checklist_selection, text="typ 2", variable=self.selection_type, value=2,
+                                font=(self.font, self.font_size2))
+        check2.grid(row=2, column=0, sticky=tk.W + tk.E)
+        check3 = tk.Radiobutton(self.checklist_selection, text="typ 3", variable=self.selection_type, value=3,
+                                font=(self.font, self.font_size2))
+        check3.grid(row=3, column=0, sticky=tk.W + tk.E)
+
+        self.checklist_selection.place(**SELECTION_SELECT_POS)
+
     def create_mutation_selector(self):
         self.checklist_crossing.columnconfigure(0, weight=1)
 
@@ -333,24 +352,7 @@ class GUI:
 
         self.checklist_mutation.place(**MUTATION_SELECT_POS)
 
-    def create_selection_selector(self):
-        self.checklist_selection.columnconfigure(0, weight=1)
 
-        self.label_selection = tk.Label(self.checklist_selection, text="Typ selekcji",
-                                       font=(self.font, self.font_size2))
-        self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
-
-        check1 = tk.Radiobutton(self.checklist_selection, text="typ 1", variable=self.selection_type, value=1,
-                                font=(self.font, self.font_size2))
-        check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklist_selection, text="typ 2", variable=self.selection_type, value=2,
-                                font=(self.font, self.font_size2))
-        check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklist_selection, text="typ 3", variable=self.selection_type, value=3,
-                                font=(self.font, self.font_size2))
-        check3.grid(row=3, column=0, sticky=tk.W + tk.E)
-
-        self.checklist_selection.place(**SELECTION_SELECT_POS)
 
     def select_mutation_type(self):
         """
