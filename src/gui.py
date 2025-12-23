@@ -2,12 +2,16 @@ import tkinter as tk
 from math import ceil
 from tkinter import messagebox
 
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                               NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
+import matplotlib as plt
 from matplotlib.figure import Figure
 
 FONT_SIZE = 20
 FONT = "Helvetica"
+
+COST_GRAPH_POS = {"relx": 0.05, "rely": 0.1}
+POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.3}
+TIME_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 
 
 class GUI:
@@ -37,16 +41,21 @@ class GUI:
         self.checkbox = tk.Checkbutton()
 
         # checklist
+        self.label_mutation = tk.Label()
         self.mutation_type = tk.IntVar(value=1)
         self.checklist = tk.Frame(self.root)
 
         # graph
-        self.fig = Figure(figsize=(4, 4))
-        self.canvas = FigureCanvasTkAgg()
+        self.fig_cost = Figure()
+        self.canvas_cost = FigureCanvasTkAgg()
+        self.fig_population = Figure()
+        self.canvas_population = FigureCanvasTkAgg()
+        self.fig_time = Figure()
+        self.canvas_time = FigureCanvasTkAgg()
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
-        #self.place_everything()
+        # self.place_everything()
         self.starting_screen()
         self.root.mainloop()
 
@@ -60,7 +69,10 @@ class GUI:
         self.root.config(menu=self.menu_bar)
         self.update_text_elements()
         self.create_checklist()
-        self.update_graph()
+
+        self.update_cost_graph()
+        self.update_population_graph()
+        self.update_time_graph()
 
     # def move_from_start_screen(self):
     #     """
@@ -71,7 +83,7 @@ class GUI:
 
     def clear_everything(self):
         """
-        Remove every single element of GUI
+        DEBUG FUNCTION. Remove every single element of GUI.
         :return:
         """
         for widget in self.root.winfo_children():
@@ -79,7 +91,8 @@ class GUI:
 
     def starting_screen(self):
         self.update_window_params()
-        self.label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",font=(self.font, self.font_size1))
+        self.label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
+                              font=(self.font, self.font_size1))
         self.label.pack()
         self.button = tk.Button(self.root, text="START", command=self.place_everything)
         self.button.place(relx=0.45, rely=0.15)
@@ -101,6 +114,7 @@ class GUI:
         self.root.title("Problem transportowy PSFŚ")
         self.root.geometry("1000x750")
         self.root.iconbitmap("../GEIcon.ico")
+        self.root.configure(bg='lightblue')
 
     def update_text_elements(self):
         """
@@ -124,23 +138,74 @@ class GUI:
                                        variable=self.has_iter_limit)
         self.checkbox.place(relx=0.62, rely=0.15)
 
-    def update_graph(self, x=None, y=None):
+        # checklist
+        self.label_mutation.grid_forget()
+        self.label_mutation = tk.Label(self.checklist, text="Typy Mutacji", font=(self.font, self.font_size2))
+        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
+
+    def update_cost_graph(self, fig:Figure = None) -> None:
         """
-        Plot the graph object with updates
-        :return:
+        Plot given figure object as cost graph
+        :param fig: matplotlib figure containing graph
+        :return: None
+        """
+        fig = self.create_test_graph() if fig is None else fig
+
+        self.canvas_cost = FigureCanvasTkAgg(fig, master=self.root)
+        #self.canvas_cost.get_tk_widget().place(relx= 0.1, rely=0.1)
+        self.canvas_cost.get_tk_widget().place(**COST_GRAPH_POS)
+
+        # creating the Matplotlib toolbar
+        # toolbar = NavigationToolbar2Tk(self.canvas_cost, self.root)
+        # toolbar.update()
+
+    def update_population_graph(self, fig:Figure = None) -> None:
+        """
+        Plot given figure object as cost graph
+        :param fig: matplotlib figure containing graph
+        :return: None
+        """
+        fig = self.create_test_graph() if fig is None else fig
+
+        self.canvas_population = FigureCanvasTkAgg(fig, master=self.root)
+        #self.canvas_cost.get_tk_widget().place(relx= 0.1, rely=0.1)
+        self.canvas_population.get_tk_widget().place(**POPULATION_GRAPH_POS)
+
+        # creating the Matplotlib toolbar
+        # toolbar = NavigationToolbar2Tk(self.canvas_cost, self.root)
+        # toolbar.update()
+
+    def update_time_graph(self, fig:Figure = None) -> None:
+        """
+        Plot given figure object as cost graph
+        :param fig: matplotlib figure containing graph
+        :return: None
+        """
+        fig = self.create_test_graph() if fig is None else fig
+
+        self.canvas_time = FigureCanvasTkAgg(fig, master=self.root)
+        #self.canvas_cost.get_tk_widget().place(relx= 0.1, rely=0.1)
+        self.canvas_time.get_tk_widget().place(**TIME_GRAPH_POS)
+
+        # creating the Matplotlib toolbar
+        # toolbar = NavigationToolbar2Tk(self.canvas_cost, self.root)
+        # toolbar.update()
+
+    def create_test_graph(self, x=None, y=None) -> Figure:
+        """
+        DEBUG USE ONLY. Create an example graph
+        :param x: x axis data as an iter
+        :param y: y axis data as an iter. Must be same length as x
+        :return: example graph as a plt Figure
         """
         x = [i for i in range(20)] if x is None else x
         y = [(i ** 2 - 15 * i) for i in x] if y is None else y
 
-        plot1 = self.fig.add_subplot(111)
+        fig = Figure(figsize=(4, 4),dpi=100)
+        plot1 = fig.add_subplot(111)
         plot1.plot(x, y)
 
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
-        self.canvas.get_tk_widget().place(relx=0.05, rely=0.1)
-
-        # creating the Matplotlib toolbar
-        toolbar = NavigationToolbar2Tk(self.canvas, self.root)
-        toolbar.update()
+        return fig
 
     def create_file_menu(self):
         """
@@ -175,7 +240,9 @@ class GUI:
         self.view_menu.add_command(label="Czcionka +", command=self.increase_font)
         self.view_menu.add_command(label="Czcionka -", command=self.decrease_font)
         self.view_menu.add_command(label="Wyrównaj okno", command=self.update_window_params)
+        self.view_menu.add_separator()
 
+        self.view_menu.add_command(label="Przywróć rozmiar tekstu", command=self.reset_font_size)
         self.view_menu.add_command(label="TEST1", command=self.clear_everything)
         self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
@@ -188,8 +255,8 @@ class GUI:
         """
         self.checklist.columnconfigure(0, weight=1)
 
-        label = tk.Label(self.checklist, text="Typy Mutacji", font=(self.font, self.font_size2))
-        label.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.label_mutation = tk.Label(self.checklist, text="Typy Mutacji", font=(self.font, self.font_size2))
+        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
         check1 = tk.Radiobutton(self.checklist, text="typ 1", variable=self.mutation_type, value=1)
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
         check2 = tk.Radiobutton(self.checklist, text="typ 2", variable=self.mutation_type, value=2)
@@ -199,6 +266,17 @@ class GUI:
 
         self.checklist.place(relx=0.8, rely=0.3)
 
+    def reset_font_size(self):
+        """
+        Reset the font size back to default
+        :return:
+        """
+        self.font = FONT
+        self.font_size1 = FONT_SIZE
+        self.font_size2_memory = FONT_SIZE * 0.75
+        self.font_size2 = ceil(self.font_size2_memory)
+        self.update_text_elements()
+
     def select_mutation_type(self):
         """
         TEST METHOD ONLY
@@ -207,6 +285,7 @@ class GUI:
         """
         mutation_type = self.mutation_type.get()
 
+        # TODO: implement me
         if mutation_type == 1:
             print(1)
         elif mutation_type == 2:
@@ -288,7 +367,8 @@ class GUI:
         save currently loaded population to .csv
         :return:
         """
-        if messagebox.askyesno(title="Zapisz populację", message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
+        if messagebox.askyesno(title="Zapisz populację",
+                               message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
             # TODO: implement me!
             pass
 
@@ -297,7 +377,8 @@ class GUI:
         Save view settings config to .json
         :return:
         """
-        if messagebox.askyesno(title="Zapisz ustawienia", message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
+        if messagebox.askyesno(title="Zapisz ustawienia",
+                               message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
             # TODO: implement me!
             pass
 
