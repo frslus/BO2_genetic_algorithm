@@ -3,17 +3,19 @@ from math import ceil
 from tkinter import messagebox
 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
-import matplotlib as plt
 from matplotlib.figure import Figure
 
+# text constants
 FONT_SIZE = 20
 FONT = "Helvetica"
 
-COST_GRAPH_POS = {"relx": 0.05, "rely": 0.1}
-POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.3}
-TIME_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
+# graph position constants
+COST_GRAPH_POS = {"relx": 0.05, "rely": 0.05}
+POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
+TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 
-
+CROSSING_SELECT_POS = {"relx":0.8, "rely":0.3}
+GENERATE_SOLUTION_POS = {"relx":0.6, "rely":0.07}
 class GUI:
     """
     Represent the main GUI window
@@ -40,10 +42,10 @@ class GUI:
         self.has_iter_limit = tk.IntVar(value=1)
         self.checkbox = tk.Checkbutton()
 
-        # checklist
-        self.label_mutation = tk.Label()
-        self.mutation_type = tk.IntVar(value=1)
-        self.checklist = tk.Frame(self.root)
+        # crossing type
+        self.label_crossing = tk.Label()
+        self.crossing_type = tk.IntVar(value=1)
+        self.checklist_crossing = tk.Frame(self.root)
 
         # graph
         self.fig_cost = Figure()
@@ -55,10 +57,10 @@ class GUI:
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
-        # self.place_everything()
         self.starting_screen()
         self.root.mainloop()
 
+    # screen management
     def place_everything(self):
         """
         Places every element of the GUI
@@ -68,18 +70,8 @@ class GUI:
         self.create_full_menu()
         self.root.config(menu=self.menu_bar)
         self.update_text_elements()
-        self.create_checklist()
-
-        self.update_cost_graph()
-        self.update_population_graph()
-        self.update_time_graph()
-
-    # def move_from_start_screen(self):
-    #     """
-    #     Clear and place every element of the GUI
-    #     :return:
-    #     """
-    #     self.place_everything()
+        self.create_crossing_checklist()
+        self.update_graphs()
 
     def clear_everything(self):
         """
@@ -97,15 +89,16 @@ class GUI:
         self.button = tk.Button(self.root, text="START", command=self.place_everything)
         self.button.place(relx=0.45, rely=0.15)
 
-    def create_full_menu(self):
+    def close_window(self):
         """
-        Create the full menu
-        :return:
+        Handle closing via top right corner X
+        :return: None
         """
-        # TODO: assess if function is redundant (= if menu will not be expanded)
-        self.create_file_menu()
-        self.create_view_menu()
+        if messagebox.askyesno(title="Zamknij",
+                               message="Czy na pewno chcesz wyjść z aplikacji?\nZmiany mogą być niezapisane!"):
+            self.root.destroy()
 
+    # general updates
     def update_window_params(self):
         """
         Update window parameters
@@ -130,7 +123,7 @@ class GUI:
         self.button.place_forget()
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
                                 command=self.generate_solution)
-        self.button.place(relx=0.6, rely=0.07)
+        self.button.place(**GENERATE_SOLUTION_POS)
 
         # checkbox
         self.checkbox.place_forget()
@@ -139,11 +132,11 @@ class GUI:
         self.checkbox.place(relx=0.62, rely=0.15)
 
         # checklist
-        self.label_mutation.grid_forget()
-        self.label_mutation = tk.Label(self.checklist, text="Typy Mutacji", font=(self.font, self.font_size2))
-        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.label_crossing.grid_forget()
+        self.label_crossing = tk.Label(self.checklist_crossing, text="Typy Mutacji", font=(self.font, self.font_size2))
+        self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
 
-    def update_cost_graph(self, fig:Figure = None) -> None:
+    def update_cost_graph(self, fig: Figure = None) -> None:
         """
         Plot given figure object as cost graph
         :param fig: matplotlib figure containing graph
@@ -152,43 +145,33 @@ class GUI:
         fig = self.create_test_graph() if fig is None else fig
 
         self.canvas_cost = FigureCanvasTkAgg(fig, master=self.root)
-        #self.canvas_cost.get_tk_widget().place(relx= 0.1, rely=0.1)
         self.canvas_cost.get_tk_widget().place(**COST_GRAPH_POS)
 
-        # creating the Matplotlib toolbar
-        # toolbar = NavigationToolbar2Tk(self.canvas_cost, self.root)
-        # toolbar.update()
-
-    def update_population_graph(self, fig:Figure = None) -> None:
+    def update_population_graph(self, fig: Figure = None) -> None:
         """
-        Plot given figure object as cost graph
+        Plot given figure object as population graph
         :param fig: matplotlib figure containing graph
         :return: None
         """
         fig = self.create_test_graph() if fig is None else fig
 
         self.canvas_population = FigureCanvasTkAgg(fig, master=self.root)
-        #self.canvas_cost.get_tk_widget().place(relx= 0.1, rely=0.1)
         self.canvas_population.get_tk_widget().place(**POPULATION_GRAPH_POS)
 
-        # creating the Matplotlib toolbar
-        # toolbar = NavigationToolbar2Tk(self.canvas_cost, self.root)
-        # toolbar.update()
-
-    def update_time_graph(self, fig:Figure = None) -> None:
+    def update_time_graph(self, fig: Figure = None) -> None:
         """
-        Plot given figure object as cost graph
+        Plot given figure object as time graph
         :param fig: matplotlib figure containing graph
         :return: None
         """
         fig = self.create_test_graph() if fig is None else fig
 
         self.canvas_time = FigureCanvasTkAgg(fig, master=self.root)
-        #self.canvas_cost.get_tk_widget().place(relx= 0.1, rely=0.1)
+        # self.canvas_time.get_tk_widget().place(relx= 0.1, rely=0.1)
         self.canvas_time.get_tk_widget().place(**TIME_GRAPH_POS)
 
         # creating the Matplotlib toolbar
-        # toolbar = NavigationToolbar2Tk(self.canvas_cost, self.root)
+        # toolbar = NavigationToolbar2Tk(self.canvas_time, self.root)
         # toolbar.update()
 
     def create_test_graph(self, x=None, y=None) -> Figure:
@@ -201,11 +184,33 @@ class GUI:
         x = [i for i in range(20)] if x is None else x
         y = [(i ** 2 - 15 * i) for i in x] if y is None else y
 
-        fig = Figure(figsize=(4, 4),dpi=100)
+        fig = Figure(figsize=(3, 3), dpi=100)
         plot1 = fig.add_subplot(111)
         plot1.plot(x, y)
 
         return fig
+
+    def update_graphs(self, fig_cost: Figure = None, fig_population: Figure = None, fig_time: Figure = None) -> None:
+        """
+        Update graphs in GUI with given figures
+        :param fig_cost: new cost graph
+        :param fig_population: new population graph
+        :param fig_time: new time graph
+        :return: None
+        """
+        self.update_cost_graph(fig_cost)
+        self.update_time_graph(fig_time)
+        self.update_population_graph(fig_population)
+
+    # menu handling
+    def create_full_menu(self):
+        """
+        Create the full menu
+        :return:
+        """
+        # TODO: assess if function is redundant (= if menu will not be expanded)
+        self.create_file_menu()
+        self.create_view_menu()
 
     def create_file_menu(self):
         """
@@ -248,24 +253,43 @@ class GUI:
 
         self.menu_bar.add_cascade(menu=self.view_menu, label="Widok")
 
-    def create_checklist(self):
+    # algorithm parameters selection
+    def create_crossing_checklist(self):
         """
         create the checklist with single answer
         :return:
         """
-        self.checklist.columnconfigure(0, weight=1)
+        self.checklist_crossing.columnconfigure(0, weight=1)
 
-        self.label_mutation = tk.Label(self.checklist, text="Typy Mutacji", font=(self.font, self.font_size2))
-        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
-        check1 = tk.Radiobutton(self.checklist, text="typ 1", variable=self.mutation_type, value=1)
+        self.label_crossing = tk.Label(self.checklist_crossing, text="Typ krzyżowania",
+                                       font=(self.font, self.font_size2))
+        self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
+        check1 = tk.Radiobutton(self.checklist_crossing, text="typ 1", variable=self.crossing_type, value=1)
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklist, text="typ 2", variable=self.mutation_type, value=2)
+        check2 = tk.Radiobutton(self.checklist_crossing, text="typ 2", variable=self.crossing_type, value=2)
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklist, text="typ 3", variable=self.mutation_type, value=3)
+        check3 = tk.Radiobutton(self.checklist_crossing, text="typ 3", variable=self.crossing_type, value=3)
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
-        self.checklist.place(relx=0.8, rely=0.3)
+        self.checklist_crossing.place(**CROSSING_SELECT_POS)
 
+    def select_mutation_type(self):
+        """
+        TEST METHOD ONLY
+        Select the type of mutation
+        :return:
+        """
+        mutation_type = self.crossing_type.get()
+
+        # TODO: implement me
+        if mutation_type == 1:
+            print(1)
+        elif mutation_type == 2:
+            print(2)
+        elif mutation_type == 3:
+            print(3)
+
+    # text operations
     def reset_font_size(self):
         """
         Reset the font size back to default
@@ -277,30 +301,30 @@ class GUI:
         self.font_size2 = ceil(self.font_size2_memory)
         self.update_text_elements()
 
-    def select_mutation_type(self):
+    def increase_font(self):
         """
-        TEST METHOD ONLY
-        Select the type of mutation
+        Increase font size and update menu
         :return:
         """
-        mutation_type = self.mutation_type.get()
+        self.font_size1 += 2
+        self.font_size2_memory += 1.5
+        # print(self.font_size1, self.font_size2_memory)
+        self.font_size2 = ceil(self.font_size2_memory)
 
-        # TODO: implement me
-        if mutation_type == 1:
-            print(1)
-        elif mutation_type == 2:
-            print(2)
-        elif mutation_type == 3:
-            print(3)
+        self.update_text_elements()
 
-    def close_window(self):
+    def decrease_font(self):
         """
-        Handle closing via top right corner X
-        :return: None
+        Decrease font size
+        :return:
         """
-        if messagebox.askyesno(title="Zamknij",
-                               message="Czy na pewno chcesz wyjść z aplikacji?\nZmiany mogą być niezapisane!"):
-            self.root.destroy()
+        self.font_size1 -= 2 if self.font_size2 > 2 else 0
+        self.font_size2_memory -= 1.5 if self.font_size2_memory > 1.5 else 0
+
+        self.font_size2 = ceil(self.font_size2_memory)
+        # print(self.font_size1, self.font_size2_memory, self.font_size2)
+
+        self.update_text_elements()
 
     def generate_solution(self):
         """
@@ -313,6 +337,7 @@ class GUI:
         else:
             print(9999)
 
+    # file handling
     def load_graph(self):
         """
         Handle loading graph from  .csv
@@ -391,31 +416,6 @@ class GUI:
                                message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
             # TODO: implement me!
             pass
-
-    def increase_font(self):
-        """
-        Increase font size and update menu
-        :return:
-        """
-        self.font_size1 += 2
-        self.font_size2_memory += 1.5
-        # print(self.font_size1, self.font_size2_memory)
-        self.font_size2 = ceil(self.font_size2_memory)
-
-        self.update_text_elements()
-
-    def decrease_font(self):
-        """
-        Decrease font size
-        :return:
-        """
-        self.font_size1 -= 2 if self.font_size2 > 2 else 0
-        self.font_size2_memory -= 1.5 if self.font_size2_memory > 1.5 else 0
-
-        self.font_size2 = ceil(self.font_size2_memory)
-        # print(self.font_size1, self.font_size2_memory, self.font_size2)
-
-        self.update_text_elements()
 
 
 if __name__ == '__main__':
