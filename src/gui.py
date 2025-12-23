@@ -14,13 +14,18 @@ COST_GRAPH_POS = {"relx": 0.05, "rely": 0.05}
 POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 
+# algorithm parameter labels
+TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
+                  "Limit pokoleń (ogólny)"]
+
 # algorithm parameter selection positions
+NUMBER_PARAMS_POS = {"relx": 0.6, "rely": 0.3}
 CROSSING_SELECT_POS = {"relx": 0.85, "rely": 0.3}
 SELECTION_SELECT_POS = {"relx": 0.85, "rely": 0.5}
 MUTATION_SELECT_POS = {"relx": 0.85, "rely": 0.7}
 
 GENERATE_SOLUTION_POS = {"relx": 0.6, "rely": 0.7}
-CHECKBOX_POS = {"relx": 0.60, "rely": 0.77}
+CHECKBOX_POS = {"relx": 0.6, "rely": 0.77}
 
 
 class GUI:
@@ -44,7 +49,10 @@ class GUI:
         self.view_menu = tk.Menu(self.menu_bar, tearoff=0)
 
         # text fields
-        self.textbox = tk.Text(self.root)
+        textbox_count = len(TEXTBOX_LABELS)
+        self.textboxes = [tk.Text() for _ in range(textbox_count)]
+        self.textbox_labels = [tk.Label() for _ in range(textbox_count)]
+        self.textbox_grid = tk.Frame(self.root)
 
         # crossing type
         self.label_crossing = tk.Label()
@@ -140,9 +148,18 @@ class GUI:
         self.main_label.pack()
 
         # textbox
-        self.textbox.place_forget()
-        self.textbox = tk.Text(self.root,height=1,width=5,font=(self.font, self.font_size1))
-        self.textbox.place(relx=0.5, rely=0.5)
+        for i in range(5):
+            textbox = self.textboxes[i]
+            textbox.place_forget()
+            textbox = tk.Text(self.textbox_grid, height=1, width=5, font=(self.font, self.font_size1))
+            textbox.grid(row=i, column=1, sticky=tk.W + tk.E)
+
+            textbox_label = self.textbox_labels[i]
+            textbox_label.place_forget()
+            textbox_label = tk.Label(self.textbox_grid, text=TEXTBOX_LABELS[i])
+            textbox_label.grid(row=i, column=0, sticky=tk.W + tk.E)
+
+        self.textbox_grid.place(**NUMBER_PARAMS_POS)
 
         # crossing checklist
         self.label_crossing.grid_forget()
