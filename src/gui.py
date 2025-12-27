@@ -17,8 +17,8 @@ CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
 #graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy","Graf"]
-CITY_BUTTON_POS = {"relx": 0.1, "rely": 0.9}
-SOL_BUTTON_POS = {"relx": 0.2, "rely": 0.9}
+CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.92}
+SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.92}
 
 # algorithm parameter labels
 TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
@@ -205,6 +205,7 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
+        self.canvas['cost'].get_tk_widget().place_forget()
         self.canvas['cost'] = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas['cost'].get_tk_widget().place(**COST_GRAPH_POS)
 
@@ -216,6 +217,7 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
+        self.canvas['population'].get_tk_widget().place_forget()
         self.canvas['population'] = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas['population'].get_tk_widget().place(**POPULATION_GRAPH_POS)
 
@@ -227,6 +229,7 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
+        self.canvas['time'].get_tk_widget().place_forget()
         self.canvas['time'] = FigureCanvasTkAgg(fig, master=self.root)
         # self.canvas_time.get_tk_widget().place(relx= 0.1, rely=0.1)
         self.canvas['time'].get_tk_widget().place(**TIME_GRAPH_POS)
@@ -279,6 +282,7 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
+        self.canvas["city_graph"].get_tk_widget().place_forget()
         self.canvas["city_graph"] = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas["city_graph"].get_tk_widget().place(**CITY_GRAPH_POS)
 
