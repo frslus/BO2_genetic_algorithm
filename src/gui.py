@@ -5,9 +5,11 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 
+
 # text constants
 FONT_SIZE = 18
 FONT = "Helvetica"
+
 
 # graph positions
 COST_GRAPH_POS = {"relx": 0.05, "rely": 0.05}
@@ -17,6 +19,10 @@ TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 # algorithm parameter labels
 TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
                   "Limit pokoleń (ogólny)"]
+# TEXTBOX_VALUES = [100, 25, 5, 100, 9999]
+CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
+FIGURE_LAYERS = ["cost", "population", "time"]
+
 
 # algorithm parameter selection positions
 NUMBER_PARAMS_POS = {"relx": 0.6, "rely": 0.3}
@@ -54,20 +60,11 @@ class GUI:
         self.textbox_labels = [tk.Label() for _ in range(textbox_count)]
         self.textbox_grid = tk.Frame(self.root)
 
-        # crossing type
-        self.label_crossing = tk.Label()
-        self.crossing_type = tk.IntVar(value=1)
-        self.checklist_crossing = tk.Frame(self.root)
-
-        # selection type
-        self.label_selection = tk.Label()
-        self.selection_type = tk.IntVar(value=1)
-        self.checklist_selection = tk.Frame(self.root)
-
-        # mutation type
-        self.label_mutation = tk.Label()
-        self.is_mutation_type = [tk.IntVar(value=1) for _ in range(3)]
-        self.checklist_mutation = tk.Frame(self.root)
+        # checkboxes
+        self.checklabels = {name:tk.Label() for name in CHECKBOX_LABELS}
+        self.checktype = {name:tk.IntVar(value=1) for name in CHECKBOX_LABELS}
+        self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(3)]
+        self.checklists = {name:tk.Frame(self.root) for name in CHECKBOX_LABELS}
 
         # generate solution button
         self.main_label = tk.Label()
@@ -76,12 +73,8 @@ class GUI:
         self.checkbox = tk.Checkbutton()
 
         # graphs
-        self.fig_cost = Figure()
-        self.canvas_cost = FigureCanvasTkAgg()
-        self.fig_population = Figure()
-        self.canvas_population = FigureCanvasTkAgg()
-        self.fig_time = Figure()
-        self.canvas_time = FigureCanvasTkAgg()
+        self.figures = {name: Figure() for name in FIGURE_LAYERS}
+        self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
@@ -162,22 +155,22 @@ class GUI:
         self.textbox_grid.place(**NUMBER_PARAMS_POS)
 
         # crossing checklist
-        self.label_crossing.grid_forget()
-        self.label_crossing = tk.Label(self.checklist_crossing, text="Typy krzyżowania",
+        self.checklabels['crossing'].grid_forget()
+        self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typy krzyżowania",
                                        font=(self.font, self.font_size2))
-        self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # selection checklist
-        self.label_selection.grid_forget()
-        self.label_selection = tk.Label(self.checklist_selection, text="Typy selekcji",
+        self.checklabels['selection'].grid_forget()
+        self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typy selekcji",
                                         font=(self.font, self.font_size2))
-        self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # mutation checklist
-        self.label_mutation.grid_forget()
-        self.label_mutation = tk.Label(self.checklist_mutation, text="Typ mutacji",
+        self.checklabels['mutation'].grid_forget()
+        self.checklabels['mutation']= tk.Label(self.checklists['mutation'], text="Typ mutacji",
                                        font=(self.font, self.font_size2))
-        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # button
         self.button.place_forget()
@@ -199,8 +192,8 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
-        self.canvas_cost = FigureCanvasTkAgg(fig, master=self.root)
-        self.canvas_cost.get_tk_widget().place(**COST_GRAPH_POS)
+        self.canvas['cost'] = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas['cost'].get_tk_widget().place(**COST_GRAPH_POS)
 
     def update_population_graph(self, fig: Figure = None) -> None:
         """
@@ -210,8 +203,8 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
-        self.canvas_population = FigureCanvasTkAgg(fig, master=self.root)
-        self.canvas_population.get_tk_widget().place(**POPULATION_GRAPH_POS)
+        self.canvas['population'] = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas['population'].get_tk_widget().place(**POPULATION_GRAPH_POS)
 
     def update_time_graph(self, fig: Figure = None) -> None:
         """
@@ -221,9 +214,9 @@ class GUI:
         """
         fig = self.create_test_graph() if fig is None else fig
 
-        self.canvas_time = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas['time'] = FigureCanvasTkAgg(fig, master=self.root)
         # self.canvas_time.get_tk_widget().place(relx= 0.1, rely=0.1)
-        self.canvas_time.get_tk_widget().place(**TIME_GRAPH_POS)
+        self.canvas['time'].get_tk_widget().place(**TIME_GRAPH_POS)
 
         # creating the Matplotlib toolbar
         # toolbar = NavigationToolbar2Tk(self.canvas_time, self.root)
@@ -323,60 +316,64 @@ class GUI:
         create the checklist with single answer
         :return:
         """
-        self.checklist_crossing.columnconfigure(0, weight=1)
+        self.checklists['crossing'].columnconfigure(0, weight=1)
 
-        self.label_crossing = tk.Label(self.checklist_crossing, text="Typ krzyżowania",
+        self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typ krzyżowania",
                                        font=(self.font, self.font_size2))
-        self.label_crossing.grid(row=0, column=0, sticky=tk.W + tk.E)
-        check1 = tk.Radiobutton(self.checklist_crossing, text="typ 1", variable=self.crossing_type, value=1,
+        self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
+
+        crossing_type = self.checktype['crossing']
+        check1 = tk.Radiobutton(self.checklists['crossing'], text="typ 1", variable=crossing_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklist_crossing, text="typ 2", variable=self.crossing_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['crossing'], text="typ 2", variable=crossing_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklist_crossing, text="typ 3", variable=self.crossing_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['crossing'], text="typ 3", variable=crossing_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
-        self.checklist_crossing.place(**CROSSING_SELECT_POS)
+        self.checklists['crossing'].place(**CROSSING_SELECT_POS)
 
     def create_selection_selector(self):
-        self.checklist_selection.columnconfigure(0, weight=1)
+        self.checklists['selection'].columnconfigure(0, weight=1)
 
-        self.label_selection = tk.Label(self.checklist_selection, text="Typ selekcji",
+        self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typ selekcji",
                                         font=(self.font, self.font_size2))
-        self.label_selection.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
-        check1 = tk.Radiobutton(self.checklist_selection, text="typ 1", variable=self.selection_type, value=1,
+        selection_type = self.checktype['selection']
+        check1 = tk.Radiobutton(self.checklists['selection'], text="typ 1", variable= selection_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklist_selection, text="typ 2", variable=self.selection_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['selection'], text="typ 2", variable= selection_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklist_selection, text="typ 3", variable=self.selection_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['selection'], text="typ 3", variable= selection_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
-        self.checklist_selection.place(**SELECTION_SELECT_POS)
+        self.checklists['selection'].place(**SELECTION_SELECT_POS)
 
     def create_mutation_selector(self):
-        self.checklist_crossing.columnconfigure(0, weight=1)
+        self.checklists['crossing'].columnconfigure(0, weight=1)
 
-        self.label_mutation = tk.Label(self.checklist_mutation, text="Typ mutacji",
+        self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typ mutacji",
                                        font=(self.font, self.font_size2))
-        self.label_mutation.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
-        check1 = tk.Checkbutton(self.checklist_mutation, text="typ 1", font=(self.font, self.font_size2),
-                                variable=self.is_mutation_type[0])
+        mutation_type = self.checktype['mutation']
+        check1 = tk.Checkbutton(self.checklists['mutation'], text="typ 1", font=(self.font, self.font_size2),
+                                variable=mutation_type[0])
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Checkbutton(self.checklist_mutation, text="typ 2", font=(self.font, self.font_size2),
-                                variable=self.is_mutation_type[1])
+        check2 = tk.Checkbutton(self.checklists['mutation'], text="typ 2", font=(self.font, self.font_size2),
+                                variable=mutation_type[1])
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Checkbutton(self.checklist_mutation, text="typ 3", font=(self.font, self.font_size2),
-                                variable=self.is_mutation_type[2])
+        check3 = tk.Checkbutton(self.checklists['mutation'], text="typ 3", font=(self.font, self.font_size2),
+                                variable=mutation_type[2])
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
-        self.checklist_mutation.place(**MUTATION_SELECT_POS)
+        self.checklists['mutation'].place(**MUTATION_SELECT_POS)
 
     def select_mutation_type(self):
         """
