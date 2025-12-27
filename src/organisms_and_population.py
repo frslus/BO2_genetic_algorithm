@@ -4,12 +4,23 @@ from random import randint
 
 import networkx as nx
 
-
 class TransitMode(Enum):
     PLANE = "plane"
     CAR = "car"
     TRAIN = "train"
 
+    def __str__(self):
+        return self.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        if hasattr(other, "value"):
+            return self.value == other.value
+        return self.value == other
+    def __ne__(self, other):
+        return not (self == other)
 
 class CrossingType(Enum):
     ONE_CUT = "cut"
@@ -162,13 +173,19 @@ class Organism:
     Represents one specific solution.
     """
 
-    def __init__(self, genotype: Genotype, problem: nx.MultiGraph):
-        if not isinstance(problem, nx.MultiGraph):
-            raise TypeError(f"Problem must be type of {nx.MultiGraph}, not {type(problem)}")
+    def __init__(self, genotype: Genotype):
         if not isinstance(genotype, Genotype):
             raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
         self.__genotype = genotype
-        self.__problem = problem
+
+    def __iter__(self):
+        return iter(self.__genotype)
+
+    def __getitem__(self, index):
+        return self.__genotype[index]
+
+    def __setitem__(self, index, value):
+        self.__genotype[index] = value
 
     def __len__(self):
         return len(self.__genotype)

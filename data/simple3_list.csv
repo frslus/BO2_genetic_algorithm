@@ -1,0 +1,6 @@
+packages_number;;;;;
+3;;;;;
+number;city_from;city_to;date_ready;date_delivery;weight
+0;A;B;1;6;5
+1;B;C;3;5;4
+2;C;B;5;10;3

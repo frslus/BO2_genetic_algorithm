@@ -1,12 +1,70 @@
 from copy import deepcopy
-
+from file_handling import *
+from organisms_and_population import *
+from generate_graphs import INF
 import networkx as nx
 
+
 class TransportProblemObject:
-    def __init__(self, cities_graph: nx.MultiGraph, packages_list: list[dict]):
-        param_list = [(cities_graph, nx.MultiGraph), (packages_list, list[dict])]
-        for param, ptype in param_list:
-            if not isinstance(param, ptype):
-                raise TypeError(f"Parameter {param} must be of type {ptype}, not {type(param)}")
+    def __init__(self, cities_graph: nx.MultiGraph | str, packages_list: list[dict] | str):
+        if isinstance(cities_graph, str):
+            cities_graph_file = cities_graph
+            cities_graph = load_graph_from_file(cities_graph_file)
+        if isinstance(packages_list, str):
+            packages_list_file = packages_list
+            packages_list = load_list_from_file(packages_list_file)
         self.__cities_graph = deepcopy(cities_graph)
         self.__packages_list = deepcopy(packages_list)
+        self.__timespan = max([elem["date_delivery"] for elem in self.__packages_list])
+
+    def save_to_file(self, filename: str) -> None:
+        save_graph_to_file(self.__cities_graph, filename + "/cities_graph.csv")
+        save_list_to_file(self.__packages_list, filename + "/packages_list.csv")
+
+    def evaluate_function(self, organism: Organism) -> float:
+        cost = 0.0
+        storage_matrix = [{key: 0 for key in self.__cities_graph.nodes} for _ in range(self.__timespan)]
+        for i in range(len(organism)):
+            location = self.__packages_list[i]["city_from"]
+            is_transported = False
+            transport_end = None
+            j = 0
+            for t in range(self.__packages_list[i]["date_ready"], self.__packages_list[i]["date_delivery"]):
+                if is_transported:
+                    if transport_end <= t:
+                        is_transported = False
+                        location = organism[i][j].city_to
+                        j += 1
+                if not is_transported and j < len(organism[i]):
+                    if organism[i][j].date < t:
+                        # DEBUGGING
+                        print(i, j, t, organism[i][j])
+                        # /DEBUGGING
+                        return INF
+                    if organism[i][j].date == t:
+                        is_transported = True
+                        transport_end = organism[i][j].date + self.__cities_graph[location][organism[i][j].city_to][
+                            organism[i][j].mode_of_transit]["time"]
+                        cost += self.__cities_graph[location][organism[i][j].city_to][
+                            organism[i][j].mode_of_transit]["cost"]
+                # DEBUGGING
+                if not is_transported:
+                    storage_matrix[t][location] += self.__packages_list[i]["weight"]
+                print(f"n={i} t={t}: ", end="")
+                if is_transported:
+                    print(f" -> {transport_end}")
+                else:
+                    print(f" {location} ")
+                # /DEBUGGING
+        # DEBUGGING
+        for i, elem in enumerate(storage_matrix):
+            print(f"{i}: {elem}")
+        # /DEBUGGING
+        capacities = {elem[0] : elem[1]["capacity"] for elem in self.__cities_graph.nodes(data=True)}
+        for t in range(self.__timespan):
+            for location in self.__cities_graph.nodes:
+                if storage_matrix[t][location] > capacities[location]:
+                    # DEBUGGING
+                    print(t, location, storage_matrix[t][location], self.__cities_graph[location]["capacity"])
+                    # /DEBUGGING
+        return cost

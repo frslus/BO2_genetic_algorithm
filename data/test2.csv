@@ -1,5 +1,5 @@
 packages_number
 2
 number;city_from;city_to;date_ready;date_delivery;weight
-1;xD1;xD2;1;2;10
-2;xD3;xD4;3;4;20
+0;xD1;xD2;1;2;10
+1;xD3;xD4;3;4;20
