@@ -5,24 +5,22 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 
-
 # text constants
 FONT_SIZE = 18
 FONT = "Helvetica"
-
 
 # graph positions
 COST_GRAPH_POS = {"relx": 0.05, "rely": 0.05}
 POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
+CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
 # algorithm parameter labels
 TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
                   "Limit pokoleń (ogólny)"]
 # TEXTBOX_VALUES = [100, 25, 5, 100, 9999]
 CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
-FIGURE_LAYERS = ["cost", "population", "time"]
-
+FIGURE_LAYERS = ["cost", "population", "time","city_graph"]
 
 # algorithm parameter selection positions
 NUMBER_PARAMS_POS = {"relx": 0.6, "rely": 0.3}
@@ -32,7 +30,6 @@ MUTATION_SELECT_POS = {"relx": 0.85, "rely": 0.7}
 
 GENERATE_SOLUTION_POS = {"relx": 0.6, "rely": 0.7}
 CHECKBOX_POS = {"relx": 0.6, "rely": 0.77}
-
 
 class GUI:
     """
@@ -61,10 +58,10 @@ class GUI:
         self.textbox_grid = tk.Frame(self.root)
 
         # checkboxes
-        self.checklabels = {name:tk.Label() for name in CHECKBOX_LABELS}
-        self.checktype = {name:tk.IntVar(value=1) for name in CHECKBOX_LABELS}
+        self.checklabels = {name: tk.Label() for name in CHECKBOX_LABELS}
+        self.checktype = {name: tk.IntVar(value=1) for name in CHECKBOX_LABELS}
         self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(3)]
-        self.checklists = {name:tk.Frame(self.root) for name in CHECKBOX_LABELS}
+        self.checklists = {name: tk.Frame(self.root) for name in CHECKBOX_LABELS}
 
         # generate solution button
         self.main_label = tk.Label()
@@ -73,7 +70,7 @@ class GUI:
         self.checkbox = tk.Checkbutton()
 
         # graphs
-        self.figures = {name: Figure() for name in FIGURE_LAYERS}
+        # self.figures = {name: Figure() for name in FIGURE_LAYERS}
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
 
         # print results
@@ -157,19 +154,19 @@ class GUI:
         # crossing checklist
         self.checklabels['crossing'].grid_forget()
         self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typy krzyżowania",
-                                       font=(self.font, self.font_size2))
+                                                font=(self.font, self.font_size2))
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # selection checklist
         self.checklabels['selection'].grid_forget()
         self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typy selekcji",
-                                        font=(self.font, self.font_size2))
+                                                 font=(self.font, self.font_size2))
         self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # mutation checklist
         self.checklabels['mutation'].grid_forget()
-        self.checklabels['mutation']= tk.Label(self.checklists['mutation'], text="Typ mutacji",
-                                       font=(self.font, self.font_size2))
+        self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typ mutacji",
+                                                font=(self.font, self.font_size2))
         self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # button
@@ -250,6 +247,32 @@ class GUI:
         self.update_time_graph(fig_time)
         self.update_population_graph(fig_population)
 
+    def clear_graphs(self) -> None:
+        """
+        clear algorithm iteration graphs
+        :return: None
+        """
+        for _,graph in self.canvas.items():
+            graph.get_tk_widget().place_forget()
+
+    def update_city_graph(self, fig: Figure = None) -> None:
+        """
+        Update the city graph (graph representation of cities with connections) in GUI with given figures
+        :param fig: matplotlib figure containing city graph
+        :return: None
+        """
+        fig = self.create_test_graph() if fig is None else fig
+
+        self.canvas["city_graph"] = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas["city_graph"].get_tk_widget().place(**CITY_GRAPH_POS)
+
+    def clear_city_graph(self)->None:
+        """
+        Clear city graph from GUI
+        :return: None
+        """
+        self.canvas["city_graph"].get_tk_widget().place_forget()
+
     # menu handling
     def create_full_menu(self):
         """
@@ -319,7 +342,7 @@ class GUI:
         self.checklists['crossing'].columnconfigure(0, weight=1)
 
         self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typ krzyżowania",
-                                       font=(self.font, self.font_size2))
+                                                font=(self.font, self.font_size2))
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         crossing_type = self.checktype['crossing']
@@ -339,17 +362,17 @@ class GUI:
         self.checklists['selection'].columnconfigure(0, weight=1)
 
         self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typ selekcji",
-                                        font=(self.font, self.font_size2))
+                                                 font=(self.font, self.font_size2))
         self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         selection_type = self.checktype['selection']
-        check1 = tk.Radiobutton(self.checklists['selection'], text="typ 1", variable= selection_type, value=1,
+        check1 = tk.Radiobutton(self.checklists['selection'], text="typ 1", variable=selection_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklists['selection'], text="typ 2", variable= selection_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['selection'], text="typ 2", variable=selection_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklists['selection'], text="typ 3", variable= selection_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['selection'], text="typ 3", variable=selection_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
@@ -359,7 +382,7 @@ class GUI:
         self.checklists['crossing'].columnconfigure(0, weight=1)
 
         self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typ mutacji",
-                                       font=(self.font, self.font_size2))
+                                                font=(self.font, self.font_size2))
         self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         mutation_type = self.checktype['mutation']
