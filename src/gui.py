@@ -15,6 +15,11 @@ POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
+#graph buttons
+GRAPHBUTTON_LABELS = ["Wykresy","Graf"]
+CITY_BUTTON_POS = {"relx": 0.1, "rely": 0.9}
+SOL_BUTTON_POS = {"relx": 0.2, "rely": 0.9}
+
 # algorithm parameter labels
 TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
                   "Limit pokoleń (ogólny)"]
@@ -72,6 +77,7 @@ class GUI:
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
+        self.graphbuttons = [tk.Button() for _ in GRAPHBUTTON_LABELS]
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
@@ -169,11 +175,21 @@ class GUI:
                                                 font=(self.font, self.font_size2))
         self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
-        # button
+        # solution button
         self.button.place_forget()
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
                                 command=self.generate_solution)
         self.button.place(**GENERATE_SOLUTION_POS)
+
+        # graph button
+        self.graphbuttons[0].place_forget()
+        self.graphbuttons[1].place_forget()
+        self.graphbuttons[0] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[0], font=(self.font, self.font_size2),
+                                    command=self.show_graphs)
+        self.graphbuttons[1] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[1], font=(self.font, self.font_size2),
+                                    command=self.show_city_graph)
+        self.graphbuttons[0].place(**SOL_BUTTON_POS)
+        self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
         # checkbox
         self.checkbox.place_forget()
@@ -266,12 +282,28 @@ class GUI:
         self.canvas["city_graph"] = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas["city_graph"].get_tk_widget().place(**CITY_GRAPH_POS)
 
-    def clear_city_graph(self)->None:
+    def clear_city_graph(self) -> None:
         """
         Clear city graph from GUI
         :return: None
         """
         self.canvas["city_graph"].get_tk_widget().place_forget()
+
+    def show_city_graph(self) -> None:
+        """
+        Choose city graph as the one shown in the GUI
+        :return:
+        """
+        self.clear_graphs()
+        self.update_city_graph()
+
+    def show_graphs(self) -> None:
+        """
+        Choose solution graphs as the one shown in the GUI
+        :return:
+        """
+        self.clear_city_graph()
+        self.update_graphs()
 
     # menu handling
     def create_full_menu(self):
