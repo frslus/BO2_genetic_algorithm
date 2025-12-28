@@ -1,4 +1,4 @@
-import copy
+from copy import deepcopy
 from math import sqrt
 from random import random, randint
 
@@ -7,9 +7,10 @@ import networkx as nx
 # predefined types
 INF = float('inf')
 type city_id = str | int
+type path = tuple[float, list[city_id]]
 type city_params = tuple[city_id, int, int, int]
 type edge = tuple[city_id, city_id]
-type edge_data = dict[edge, None] | dict[edge, int]
+type edge_data = dict[edge, None] | dict[edge, int] | dict[edge, float]
 
 
 # helpers
@@ -82,8 +83,10 @@ def assign_city_names(cities: list[city_params], names: list[str] = None) -> lis
     :param names: Optional, list of names to assign. Needs to be of the same length as cities.
     :return: A list of cities as tuple (name, x, y).
     """
-    #TODO: check for duplicates
-    return [(generate_city_name(), x, y, cap) for _, x, y, cap in cities] if names is None else cities
+    # TODO: check for duplicates
+    if names is None:
+        return [(generate_city_name(), x, y, cap) for _, x, y, cap in cities]
+    return cities
 
 
 # basic graph generation
@@ -208,7 +211,7 @@ def assign_car_costs(graph: nx.MultiGraph, roads: edge_data = None, *, car_mult:
     :param car_noise: Optional. Noise constant of the multiplier. Must be no greater than the multiplier.
     :return: dict of generated edge:car_cost, returns roads if roads provided
     """
-    #TODO: add railway like implementation for roads
+    # TODO: add railway like implementation for roads
 
     # edges and costs provided
     if roads:
@@ -235,7 +238,7 @@ def assign_car_costs(graph: nx.MultiGraph, roads: edge_data = None, *, car_mult:
 
 # train layer methods
 def assign_train_costs(graph: nx.MultiGraph, railways: edge_data = None, *, train_mult: float = 0.75,
-                       train_noise: float = 0.05, railway_chance: float = 0.75, **kwargs) -> None:
+                       train_noise: float = 0.05, railway_chance: float = 0.75, **kwargs) -> edge_data:
     """
     Assign railways from a list of edges and costs. If not all costs are provided, random ones are assigned in their places,
     with option to give multiplier and noise. If neither edges nor costs are provided, both are assigned randomly, with option
@@ -262,16 +265,15 @@ def assign_train_costs(graph: nx.MultiGraph, railways: edge_data = None, *, trai
             for j in range(i + 1, city_count):
                 city_to = cities[j]
 
-
                 if (city_from, city_to) in railways_keys:
                     # assign cost if is known
                     if (train_cost := railways[(city_from, city_to)]) is not None:
-                        graph.add_edge(city_from, city_to,key='train', cost=train_cost)
+                        graph.add_edge(city_from, city_to, key='train', cost=train_cost)
 
                     # randomize if cost is not known
                     else:
                         train_cost = randomize_data(graph[city_from][city_to]['distance']['cost'], train_mult,
-                                                     noise_cleaned)
+                                                    noise_cleaned)
                         railways[(city_from, city_to)] = train_cost
                         graph.add_edge(city_from, city_to, key='train', cost=train_cost)
 
@@ -305,16 +307,47 @@ def assign_train_costs(graph: nx.MultiGraph, railways: edge_data = None, *, trai
     return railways
 
 
-def johnson(graph: nx.MultiGraph, layer1: str = None, layer2: str = None) -> dict[edge, list[edge]]:
+def johnson(graph: nx.MultiGraph, layer1: str, layer2: str, path_layer: str = "path") -> dict[edge,path]:
     """
-    Optimise connections on a a given layer using johnson algorithm.
+    Optimise connections on a given layer using johnson algorithm.
     :param graph: The multigraph representation of cities. The layer needs to be complete.
     :param layer1: The name of the higher layer to optimize for. Must be from ("plane","car","train")
     :param layer2: The name of the lower layer to optimize for. Must be from ("cost","time")
+    :param path_layer: The name of the new layer containing calculated path
     :return: a dict of edge:optimized_path for every optimized edge in the graph
     """
-    pass
-    # TODO: IMPLEMENT ME (johnson algorithm)
+    nodes_list = [node for node in graph.nodes()]
+    param_dict = {}
+    for i, node1 in enumerate(nodes_list[:-1]):
+        d, prev = dijkstra(graph, node1, layer1, layer2)
+        print(d)
+        for node2 in nodes_list[i + 1:]:
+            p = [node2]
+            while prev[p[0]] != node1:
+                p.insert(0, prev[p[0]])
+            graph[node1][node2][layer1][layer2] = d[node2]
+            graph[node1][node2][layer1][path_layer] = deepcopy(p[:-1])
+            param_dict[(node1, node2)] = (d[node2], deepcopy(p[:-1]))
+    return param_dict
+
+
+def dijkstra(graph, node, layer1: str, layer2: str):
+    nodes_list = [node for node in graph.nodes()]
+    d = {node: INF for node in nodes_list}
+    d[node] = 0
+    q = deepcopy(nodes_list)
+    prev = {node: None for node in nodes_list}
+    while q:
+        u = q[0]
+        for i in range(1, len(q)):
+            if d[u] > d[q[i]]:
+                u = q[i]
+        q.remove(u)
+        for v in nodes_list:
+            if v != u and d[v] > d[u] + graph[u][v][layer1][layer2]:
+                d[v] = d[u] + graph[u][v][layer1][layer2]
+                prev[v] = u
+    return d, prev
 
 
 # time assignment
@@ -340,6 +373,7 @@ def assign_times(graph: nx.MultiGraph, layer: str, velocity: float = 1) -> edge_
             times[(city_from, city_to)] = time
 
     return times
+
 
 # main method
 def create_complete_graph(cities: list[city_params] = None, airports: dict[city_id, bool] = None,
@@ -372,6 +406,7 @@ def create_complete_graph(cities: list[city_params] = None, airports: dict[city_
     airports = assign_airports(graph, airports, **kwargs)
     plane_costs = assign_plane_costs(graph, **kwargs)
     train_costs = assign_train_costs(graph, railways, **kwargs)
+    optimized_train_costs = johnson(graph, "train", "cost")
     car_costs = assign_car_costs(graph, roads, **kwargs)
 
     # calculate times for each mode of transit
@@ -384,7 +419,7 @@ def create_complete_graph(cities: list[city_params] = None, airports: dict[city_
 
     # create extended output
     adj_list = {"plane": {"cost": plane_costs, "time": plane_times}, "car": {"cost": car_costs, "time": car_times},
-                "train": {"cost": train_costs, "time": train_times}}
+                "train": {"cost": train_costs, "time": train_times, "johnson": optimized_train_costs}}
 
     if not extended_output:
         return graph
