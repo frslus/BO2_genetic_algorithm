@@ -1,4 +1,3 @@
-from copy import deepcopy
 from file_handling import *
 from organisms_and_population import *
 from generate_graphs import INF
@@ -16,6 +15,15 @@ class TransportProblemObject:
         self.__cities_graph = deepcopy(cities_graph)
         self.__packages_list = deepcopy(packages_list)
         self.__timespan = max([elem["date_delivery"] for elem in self.__packages_list])
+
+    def __getattr__(self, item):
+        if item == "graph":
+            return self.__cities_graph
+        if item == "list":
+            return self.__packages_list
+        if item == "timespan":
+            return self.__timespan
+        raise AttributeError(f"The object do not have attribute: {item}")
 
     def save_to_file(self, filename: str) -> None:
         save_graph_to_file(self.__cities_graph, filename + "/cities_graph.csv")
@@ -47,24 +55,34 @@ class TransportProblemObject:
                             organism[i][j].mode_of_transit]["time"]
                         cost += self.__cities_graph[location][organism[i][j].city_to][
                             organism[i][j].mode_of_transit]["cost"]
-                # DEBUGGING
                 if not is_transported:
                     storage_matrix[t][location] += self.__packages_list[i]["weight"]
+                # DEBUGGING
                 print(f"n={i} t={t}: ", end="")
                 if is_transported:
-                    print(f" -> {transport_end}")
+                    print(f"{location} -> {organism[i][j].city_to}: {transport_end}")
                 else:
-                    print(f" {location} ")
+                    print(f"{location}")
                 # /DEBUGGING
+            else:
+                if is_transported:
+                    if transport_end <= self.__packages_list[i]["date_delivery"]:
+                        is_transported = False
+                        location = organism[i][j].city_to
+                        j += 1
+            if is_transported or j < len(organism[i]) or location != self.__packages_list[i]["city_to"]:
+                print(is_transported, j, location, "!=", self.__packages_list[i]["city_to"])
+                return INF
         # DEBUGGING
         for i, elem in enumerate(storage_matrix):
             print(f"{i}: {elem}")
         # /DEBUGGING
-        capacities = {elem[0] : elem[1]["capacity"] for elem in self.__cities_graph.nodes(data=True)}
+        capacities = {elem[0]: elem[1]["capacity"] for elem in self.__cities_graph.nodes(data=True)}
         for t in range(self.__timespan):
             for location in self.__cities_graph.nodes:
                 if storage_matrix[t][location] > capacities[location]:
                     # DEBUGGING
                     print(t, location, storage_matrix[t][location], self.__cities_graph[location]["capacity"])
                     # /DEBUGGING
+                    return INF
         return cost

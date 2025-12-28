@@ -7,14 +7,14 @@ from src.problem_description import *
 def main():
     graph, adj_list, _, _ = create_complete_graph(extended_output=True)
     # print(graph[0])
-    #print(adj_list["train"]["cost"])
-    #print(adj_list["train"]["johnson"])
+    # print(adj_list["train"]["cost"])
+    # print(adj_list["train"]["johnson"])
     # print(graph[2])
     # print(graph[3])
     j1 = johnson(graph, "train", "cost")
-    #print()
-    #for elem, d in j1.items(): print(elem, d[0], d[1])
-    #print()
+    # print()
+    # for elem, d in j1.items(): print(elem, d[0], d[1])
+    # print()
     save_graph_to_file(graph, "data/test1.csv")
     new_graph = load_graph_from_file("data/test1.csv")
     # j1 = johnson(new_graph, "train", "cost")
@@ -51,9 +51,9 @@ def main():
     ch1[0].date = 50
     # print(ch1)
     gen1 = Genotype([deepcopy(ch1), deepcopy(ch1)])
-    org1 = Organism(gen1)
+    # org1 = Organism(gen1)
     # print(org1)
-    org1.mutate(MutationType.TRANSIT_MODE)
+    # org1.mutate(MutationType.TRANSIT_MODE)
     # print(org1)
     package_list = [{"city_from": "xD1", "city_to": "xD2", "date_ready": 1, "date_delivery": 2, "weight": 10},
                     {"city_from": "xD3", "city_to": "xD4", "date_ready": 3, "date_delivery": 4, "weight": 20}]
@@ -61,8 +61,6 @@ def main():
     new_list = load_list_from_file("data/test2.csv")
     # print(package_list)
     # print(new_list)
-
-
 
     g1 = Gene("C", 1, "car")
     g2 = Gene("B", 2, "train")
@@ -73,12 +71,17 @@ def main():
     g2 = Gene("B", 8, "plane")
     ch3 = Chromosome([g1, g2])
     gen1 = Genotype([ch1, ch2, ch3])
-    org1 = Organism(gen1)
 
     tprob = TransportProblemObject("data/simple3_graph.csv", "data/simple3_list.csv")
+    org1 = Organism(gen1, tprob)
+    print(org1)
     cost1 = tprob.evaluate_function(org1)
     print(cost1)
 
+    org1.mutate(MutationType.CITY)
+    print(org1)
+    cost1 = tprob.evaluate_function(org1)
+    print(cost1)
 
 
 if __name__ == '__main__':

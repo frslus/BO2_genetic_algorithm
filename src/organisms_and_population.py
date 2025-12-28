@@ -4,6 +4,7 @@ from random import randint
 
 import networkx as nx
 
+
 class TransitMode(Enum):
     PLANE = "plane"
     CAR = "car"
@@ -19,8 +20,10 @@ class TransitMode(Enum):
         if hasattr(other, "value"):
             return self.value == other.value
         return self.value == other
+
     def __ne__(self, other):
         return not (self == other)
+
 
 class CrossingType(Enum):
     ONE_CUT = "cut"
@@ -33,6 +36,7 @@ class MutationType(Enum):
     TRANSIT_MODE = "transit_mode"
     NEW_GENE = "new_gene"
     DELETE_GENE = "delete_gene"
+
 
 type PackagesList = list[tuple[str, int, TransitMode]]
 
@@ -173,10 +177,11 @@ class Organism:
     Represents one specific solution.
     """
 
-    def __init__(self, genotype: Genotype):
+    def __init__(self, genotype: Genotype, problem):
         if not isinstance(genotype, Genotype):
             raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
         self.__genotype = genotype
+        self.__problem = problem
 
     def __iter__(self):
         return iter(self.__genotype)
@@ -199,7 +204,6 @@ class Organism:
             case CrossingType.ONE_CUT:
                 cut = randint(0, problem_size)
                 new_genotype = deepcopy(self.__genotype)[:cut] + deepcopy(other.__genotype)[cut:]
-                return Organism(new_genotype)
             case CrossingType.RANDOM_SELECTION:
                 pattern = [randint(0, 1) for _ in range(problem_size)]
                 new_genotype = []
@@ -208,7 +212,9 @@ class Organism:
                         new_genotype.append(deepcopy(self.__genotype[i]))
                     else:
                         new_genotype.append(deepcopy(other.__genotype[i]))
-        raise TypeError(f"'{crossing_type}' is not correct crossover type")
+            case _:
+                raise TypeError(f"'{crossing_type}' is not correct crossover type")
+        return Organism(new_genotype, self.__problem)
 
     def mutate(self, mutation_type: MutationType):
         problem_size = len(self)
@@ -216,21 +222,49 @@ class Organism:
         gene = randint(0, len(self.__genotype[chromosome]) - 1)
         match mutation_type:
             case MutationType.CITY:
-                cities = list(self.__problem.nodes)
+                if len(self.__genotype[chromosome]) == 1:
+                    return
+                if gene == len(self.__genotype[chromosome]) - 1:
+                    gene -= 1
+                cities = list(self.__problem.graph.nodes)
                 cities.remove(self.__genotype[chromosome][gene].city_to)
-                new_city = cities[randint(0, len(cities) - 1)]
-                self.__genotype[chromosome][gene].city_to = new_city
+                if gene == 0:
+                    cities.remove(self.__problem.list[chromosome]["city_from"])
+                else:
+                    cities.remove(self.__genotype[chromosome][gene - 1].city_to)
+                cities.remove(self.__genotype[chromosome][gene + 1].city_to)
+                if not cities:
+                    return
+                city_to = cities[randint(0, len(cities) - 1)]
+                self.__genotype[chromosome][gene].city_to = city_to
                 return
             case MutationType.DATE:
-                pass
+                if randint(0, 1) == 1:
+                    self.__genotype[chromosome][gene].date += randint(1, 3)
+                else:
+                    self.__genotype[chromosome][gene].date -= randint(1, 3)
             case MutationType.TRANSIT_MODE:
-                modes = [TransitMode.CAR, TransitMode.PLANE, TransitMode.TRAIN]
-                modes.remove(self.__genotype[chromosome][gene].mode_of_transit)
-                mode_of_transit = modes[randint(0, 1)]
+                match self.__genotype[chromosome][gene].mode_of_transit:
+                    case TransitMode.CAR:
+                        mode_of_transit = TransitMode.TRAIN if randint(0, 1) == 0 else TransitMode.PLANE
+                    case TransitMode.PLANE:
+                        mode_of_transit = TransitMode.TRAIN if randint(0, 1) == 0 else TransitMode.CAR
+                    case TransitMode.TRAIN:
+                        mode_of_transit = TransitMode.CAR if randint(0, 1) == 0 else TransitMode.PLANE
                 self.__genotype[chromosome][gene].mode_of_transit = mode_of_transit
                 return
             case MutationType.NEW_GENE:
-                pass
+                cities = list(self.__problem.graph.nodes)
+                if gene != 0:
+                    cities.remove(self.__genotype[chromosome][gene - 1].city_to)
+                cities.remove(self.__genotype[chromosome][gene + 1].city_to)
+                city_to = cities[randint(0, len(cities) - 1)]
+                date = self.__genotype[chromosome][gene - 1].date + randint(1, 3)
+                rand_idx = randint(0, 2)
+                mode_of_transit = TransitMode.TRAIN if rand_idx == 0 else TransitMode.PLANE if rand_idx == 1 else TransitMode.CAR
+                self.__genotype[chromosome].insert(gene, Gene(city_to, date, mode_of_transit))
             case MutationType.DELETE_GENE:
-                pass
+                if gene == len(self.__genotype[chromosome]) - 1:
+                    gene -= 1
+                self.__genotype[chromosome].pop(gene)
         raise ValueError(f"{mutation_type} is not correct type of mutation")
