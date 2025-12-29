@@ -1,0 +1,15 @@
+packages_number;;;;;
+12;;;;;
+number;city_from;city_to;date_ready;date_delivery;weight
+0;A;D;1;10;5
+1;B;C;3;8;7
+2;C;B;4;9;3
+3;D;A;3;10;9
+4;E;F;3;8;5
+5;F;E;5;12;3
+6;A;B;6;9;1
+7;B;C;8;10;2
+8;C;D;6;8;4
+9;D;F;11;17;5
+10;E;A;10;15;2
+11;F;E;10;15;5

@@ -2,9 +2,9 @@ cities_number;;;;
 3;;;;
 cities;;;;
 city;x;y;capacity;has_airport
-A;0;0;3;True
-B;10;10;7;False
-C;20;5;4;True
+A;0;0;9;True
+B;10;10;10;False
+C;20;5;8;True
 distance;;;;
 cost;;;;
 city;A;B;C;
@@ -31,7 +31,7 @@ C;;;;
 time;;;;
 city;A;B;C;
 A;;1.1;0.9;
-B;;;1.2;
+B;;;1.1;
 C;;;;
 car;;;;
 cost;;;;
@@ -44,7 +44,3 @@ city;A;B;C;
 A;;0.9;0.8;
 B;;;1.1;
 C;;;;
-;;;;
-;;;;
-;;;;
-;;;;

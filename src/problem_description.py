@@ -30,6 +30,9 @@ class TransportProblemObject:
         save_list_to_file(self.__packages_list, filename + "/packages_list.csv")
 
     def evaluate_function(self, organism: Organism) -> float:
+        # DEBUGGING
+        RAPORT = False
+        # /DEBUGGING
         cost = 0.0
         storage_matrix = [{key: 0 for key in self.__cities_graph.nodes} for _ in range(self.__timespan)]
         for i in range(len(organism)):
@@ -46,7 +49,8 @@ class TransportProblemObject:
                 if not is_transported and j < len(organism[i]):
                     if organism[i][j].date < t:
                         # DEBUGGING
-                        print(i, j, t, organism[i][j])
+                        if RAPORT:
+                            print(i, j, t, organism[i][j])
                         # /DEBUGGING
                         return INF
                     if organism[i][j].date == t:
@@ -54,15 +58,16 @@ class TransportProblemObject:
                         transport_end = organism[i][j].date + self.__cities_graph[location][organism[i][j].city_to][
                             organism[i][j].mode_of_transit]["time"]
                         cost += self.__cities_graph[location][organism[i][j].city_to][
-                            organism[i][j].mode_of_transit]["cost"]
+                            organism[i][j].mode_of_transit]["cost"]*self.__packages_list[i]["weight"]
                 if not is_transported:
                     storage_matrix[t][location] += self.__packages_list[i]["weight"]
                 # DEBUGGING
-                print(f"n={i} t={t}: ", end="")
-                if is_transported:
-                    print(f"{location} -> {organism[i][j].city_to}: {transport_end}")
-                else:
-                    print(f"{location}")
+                if RAPORT:
+                    print(f"n={i} t={t}: ", end="")
+                    if is_transported:
+                        print(f"{location} -> {organism[i][j].city_to}: {transport_end}")
+                    else:
+                        print(f"{location}")
                 # /DEBUGGING
             else:
                 if is_transported:
@@ -71,18 +76,23 @@ class TransportProblemObject:
                         location = organism[i][j].city_to
                         j += 1
             if is_transported or j < len(organism[i]) or location != self.__packages_list[i]["city_to"]:
-                print(is_transported, j, location, "!=", self.__packages_list[i]["city_to"])
+                # DEBUGGING
+                if RAPORT:
+                    print(is_transported, j, location, "!=", self.__packages_list[i]["city_to"])
+                # /DEBUGGING
                 return INF
         # DEBUGGING
-        for i, elem in enumerate(storage_matrix):
-            print(f"{i}: {elem}")
+        if RAPORT:
+            for i, elem in enumerate(storage_matrix):
+                print(f"{i}: {elem}")
         # /DEBUGGING
         capacities = {elem[0]: elem[1]["capacity"] for elem in self.__cities_graph.nodes(data=True)}
         for t in range(self.__timespan):
             for location in self.__cities_graph.nodes:
                 if storage_matrix[t][location] > capacities[location]:
                     # DEBUGGING
-                    print(t, location, storage_matrix[t][location], self.__cities_graph[location]["capacity"])
+                    if RAPORT:
+                        print(t, location, storage_matrix[t][location], capacities[location])
                     # /DEBUGGING
                     return INF
         return cost

@@ -1,6 +1,7 @@
 from enum import Enum
 from copy import deepcopy
 from random import randint
+from math import ceil
 
 import networkx as nx
 
@@ -26,8 +27,9 @@ class TransitMode(Enum):
 
 
 class CrossingType(Enum):
-    ONE_CUT = "cut"
-    RANDOM_SELECTION = "random"
+    ONE_CUT = "one_cut"
+    RANDOM_CUT = "random_cuts"
+    RANDOM_SELECTION = "random_selection"
 
 
 class MutationType(Enum):
@@ -198,13 +200,15 @@ class Organism:
     def __repr__(self):
         return str(self.__genotype)
 
-    def crossover(self, other, crossing_type: CrossingType):
+    def crossover(self, other, crossing_type: CrossingType | str):
+        if isinstance(crossing_type, str):
+            crossing_type = CrossingType(crossing_type)
         problem_size = len(self)
         match crossing_type:
             case CrossingType.ONE_CUT:
                 cut = randint(0, problem_size)
                 new_genotype = deepcopy(self.__genotype)[:cut] + deepcopy(other.__genotype)[cut:]
-            case CrossingType.RANDOM_SELECTION:
+            case CrossingType.RANDOM_CUT:
                 pattern = [randint(0, 1) for _ in range(problem_size)]
                 new_genotype = []
                 for i in range(problem_size):
@@ -212,14 +216,50 @@ class Organism:
                         new_genotype.append(deepcopy(self.__genotype[i]))
                     else:
                         new_genotype.append(deepcopy(other.__genotype[i]))
+            case CrossingType.RANDOM_SELECTION:
+                c_pattern = [randint(0, 1) for _ in range(problem_size)]
+                new_genotype = []
+                for i in range(problem_size):
+                    self_genes_list = [deepcopy(gene) for gene in self.__genotype[i]]
+                    other_genes_list = [deepcopy(gene) for gene in other.__genotype[i]]
+                    if c_pattern[i] == 0:
+                        last_gene = self_genes_list.pop()
+                        other_genes_list.pop()
+                    else:
+                        last_gene = other_genes_list.pop()
+                        self_genes_list.pop()
+                    all_genes_list = self_genes_list + other_genes_list
+                    all_genes_list.sort(key=lambda x: x.date)
+                    new_chromosome = []
+                    location = self.__problem.list[i]["city_from"]
+                    min_time = self.__problem.list[i]["date_ready"]
+                    for j in range(len(all_genes_list)):
+                        if all_genes_list[j].date < min_time or location == all_genes_list[j].city_to:
+                            continue
+                        if all_genes_list[j].date + self.__problem.graph[location][all_genes_list[j].city_to][
+                            all_genes_list[j].mode_of_transit]["time"] > last_gene.date:
+                            break
+                        if randint(0, 1) == 1:
+                            min_time = ceil(all_genes_list[j].date +
+                                            self.__problem.graph[location][all_genes_list[j].city_to][
+                                                all_genes_list[j].mode_of_transit]["time"])
+                            location = all_genes_list[j].city_to
+                            new_chromosome.append(deepcopy(all_genes_list[j]))
+                    new_chromosome.append(deepcopy(last_gene))
+                    new_genotype.append(Chromosome(deepcopy(new_chromosome)))
             case _:
                 raise TypeError(f"'{crossing_type}' is not correct crossover type")
-        return Organism(new_genotype, self.__problem)
+        return Organism(Genotype(new_genotype), self.__problem)
 
-    def mutate(self, mutation_type: MutationType):
+    def mutate(self, mutation_type: MutationType | str):
+        if isinstance(mutation_type, str):
+            mutation_type = MutationType(mutation_type)
         problem_size = len(self)
         chromosome = randint(0, problem_size - 1)
         gene = randint(0, len(self.__genotype[chromosome]) - 1)
+        # DEBUGGING
+        print(chromosome, gene)
+        # /DEBUGGING
         match mutation_type:
             case MutationType.CITY:
                 if len(self.__genotype[chromosome]) == 1:
@@ -237,12 +277,13 @@ class Organism:
                     return
                 city_to = cities[randint(0, len(cities) - 1)]
                 self.__genotype[chromosome][gene].city_to = city_to
-                return
             case MutationType.DATE:
+                dt = randint(1, 2)
                 if randint(0, 1) == 1:
-                    self.__genotype[chromosome][gene].date += randint(1, 3)
+                    self.__genotype[chromosome][gene].date += dt
                 else:
-                    self.__genotype[chromosome][gene].date -= randint(1, 3)
+                    self.__genotype[chromosome][gene].date -= dt if dt <= self.__genotype[chromosome][gene].date else \
+                        self.__genotype[chromosome][gene].date
             case MutationType.TRANSIT_MODE:
                 match self.__genotype[chromosome][gene].mode_of_transit:
                     case TransitMode.CAR:
@@ -257,14 +298,28 @@ class Organism:
                 cities = list(self.__problem.graph.nodes)
                 if gene != 0:
                     cities.remove(self.__genotype[chromosome][gene - 1].city_to)
-                cities.remove(self.__genotype[chromosome][gene + 1].city_to)
+                cities.remove(self.__genotype[chromosome][gene].city_to)
                 city_to = cities[randint(0, len(cities) - 1)]
-                date = self.__genotype[chromosome][gene - 1].date + randint(1, 3)
+                date = randint(1, 2) + (
+                    self.__genotype[chromosome][gene - 1].date if gene != 0 else self.__problem.list[chromosome][
+                        "date_ready"])
                 rand_idx = randint(0, 2)
                 mode_of_transit = TransitMode.TRAIN if rand_idx == 0 else TransitMode.PLANE if rand_idx == 1 else TransitMode.CAR
-                self.__genotype[chromosome].insert(gene, Gene(city_to, date, mode_of_transit))
+                try:
+                    self.__genotype[chromosome].insert(gene, Gene(city_to, date, mode_of_transit))
+                except ValueError:
+                    # DEBUGGING
+                    print("Mutation error")
+                    # /DEBUGGING
+                    pass
             case MutationType.DELETE_GENE:
+                if len(self.__genotype[chromosome]) == 1:
+                    # DEBUGGING
+                    print("Mutation error")
+                    # /DEBUGGING
+                    return
                 if gene == len(self.__genotype[chromosome]) - 1:
                     gene -= 1
                 self.__genotype[chromosome].pop(gene)
-        raise ValueError(f"{mutation_type} is not correct type of mutation")
+            case _:
+                raise ValueError(f"{mutation_type} is not correct type of mutation")
