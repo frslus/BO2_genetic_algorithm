@@ -1,7 +1,4 @@
-from src.file_handling import *
-from src.generate_graphs import *
-from src.organisms_and_population import *
-from src.problem_description import *
+from src.genetic_algorithm import *
 
 
 def main():
@@ -189,23 +186,74 @@ def main():
 
     tprob = TransportProblemObject("data/simple6_graph.csv", "data/simple6_list.csv")
     org1 = Organism(gen1, tprob)
-    #print(org1)
+    # print(org1)
     cost1 = tprob.evaluate_function(org1)
-    #print(cost1)
+    print(cost1)
     org2 = Organism(gen2, tprob)
-    #print(org2)
+    # print(org2)
     cost2 = tprob.evaluate_function(org2)
-    #print(cost2)
+    print(cost2)
 
+    children_costs = []
     children = []
     for _ in range(1000):
         org3 = org1.crossover(org2, "random_selection")
-        #print(org3)
+        # print(org3)
         cost3 = tprob.evaluate_function(org3)
-        print(cost3)
-        children.append(cost3)
-    print(len(children) - children.count(INF), "/", len(children))
-    print(min(children))
+        # print(cost3)
+        children_costs.append(cost3)
+        children.append(org3)
+    print(len(children_costs) - children_costs.count(INF), "/", len(children_costs))
+    print(min(children_costs))
+    print()
+
+    org3 = org1.crossover(org2, "random_selection")
+    min_cost = tprob.evaluate_function(org3)
+    print(min_cost)
+    inf_cnt = 0
+    muts = [elem for elem in MutationType]
+    for _ in range(1000):
+        mut = muts[randint(0, len(muts) - 1)]
+        tmp_org = deepcopy(org3)
+        tmp_org.mutate(mut)
+        cost3 = tprob.evaluate_function(tmp_org)
+        if cost3 == INF:
+            inf_cnt += 1
+        if cost3 < min_cost:
+            min_cost = cost3
+            # print(min_cost)
+    print(min_cost)
+    print((1000 - inf_cnt), "/", 1000)
+    print()
+
+    pop1 = Population(children[:4])
+    selection = pop1.selection("ranking", 0.5)
+    for elem in pop1: print(elem.cost(), end=" ")
+    print()
+    print(selection)
+    pop1.reproduction(selection, ["random_selection"], ["city", "date", "transit_mode"], 0.5)
+    for elem in pop1: print(elem.cost(), end=" ")
+    print()
+    print()
+
+    inf_cnt = 0
+    min_cost = INF
+    for _ in range(1000):
+        org4 = tprob.generate_solution()
+        org4.evaluate()
+        cost4 = org4.cost()
+        if cost4 == INF:
+            inf_cnt += 1
+        if cost4 < min_cost:
+            min_cost = cost4
+            # print(min_cost)
+    print(min_cost)
+    print((1000 - inf_cnt), "/", 1000)
+    print()
+
+    best_one = genetic_algorithm(tprob)
+    print(best_one)
+
 
 if __name__ == '__main__':
     main()

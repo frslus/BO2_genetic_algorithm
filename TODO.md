@@ -2,7 +2,7 @@
 
 1. Generowanie przypadków testowych
 
-* \[ ] napisać algorytm Johnsona do generacji połączeń kolejowych
+* \[x] napisać algorytm Johnsona do generacji połączeń kolejowych
 * \[ ] dodać możliwość generacji listy transportów
 * \[ ] połączyć generowanie grafu miast i listy ładunków aby tworzyć obiekt klasy TransportProblemObject
 
@@ -20,21 +20,21 @@
 
 5. Genetyka i populacja
 
-* \[ ] dokończyć metody krzyżujące i mutujące rozwiązanie
-* \[ ] dodać metody selekcji organizmów
+* \[x] dokończyć metody krzyżujące i mutujące rozwiązanie
+* \[x] dodać metody selekcji organizmów
 
 # STRUKTURA CAŁOŚCIOWA PRACY (składowe projektu)
 
 1. Generowanie danych
 
-* \[ ] generowanie mapy (generate\_graphs.py)
+* \[x] generowanie mapy (generate\_graphs.py)
 * \[ ] generowanie listy (TBD)
-* \[ ] zapis/odczyt mapy i listy z pliku CSV (file\_handling.py)
+* \[x] zapis/odczyt mapy i listy z pliku CSV (file\_handling.py)
 
 2\. Klasy obiektów
 
-* \[ ] obiekty reprezentujące klasy populacje, organizmy i ich składowe (organisms\_and\_population.py)
-* \[ ] klasa reprezentująca przypadek testowy (problem\_description.py)
+* \[x] obiekty reprezentujące klasy populacje, organizmy i ich składowe (organisms\_and\_population.py)
+* \[x] klasa reprezentująca przypadek testowy (problem\_description.py)
 
 3\. Interfejs
 
@@ -44,12 +44,13 @@
 
 4\. Główny algorytm
 
-* \[ ] mechanizm selekcji (TBD)
-* \[ ] mechanizm krzyżowania (TBD)
-* \[ ] mechanizm mutacji (TBD)
-* \[ ] funkcja celu (TBD)
+* \[x] mechanizm selekcji (organisms\_and\_population.py)
+* \[x] mechanizm krzyżowania (organisms\_and\_population.py)
+* \[x] mechanizm mutacji (organisms\_and\_population.py)
+* \[x] funkcja celu (problem\_description.py)
+* \[x] algorytm konstrukcyjny (problem\_description.py)
 * \[ ] (\*) możliwość zapisu algorytmu do pliku w trakcie działania (TBD)
-* \[ ] mechanizm algorytmu genetycznego
+* \[ ] mechanizm algorytmu genetycznego (genetic\_algorithm.py)
 
 5\. Testy
 

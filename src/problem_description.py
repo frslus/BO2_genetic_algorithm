@@ -1,6 +1,5 @@
 from file_handling import *
 from organisms_and_population import *
-from generate_graphs import INF
 import networkx as nx
 
 
@@ -24,6 +23,9 @@ class TransportProblemObject:
         if item == "timespan":
             return self.__timespan
         raise AttributeError(f"The object do not have attribute: {item}")
+
+    def __len__(self):
+        return len(self.__packages_list)
 
     def save_to_file(self, filename: str) -> None:
         save_graph_to_file(self.__cities_graph, filename + "/cities_graph.csv")
@@ -55,10 +57,12 @@ class TransportProblemObject:
                         return INF
                     if organism[i][j].date == t:
                         is_transported = True
+                        if location == organism[i][j].city_to:
+                            return INF
                         transport_end = organism[i][j].date + self.__cities_graph[location][organism[i][j].city_to][
                             organism[i][j].mode_of_transit]["time"]
                         cost += self.__cities_graph[location][organism[i][j].city_to][
-                            organism[i][j].mode_of_transit]["cost"]*self.__packages_list[i]["weight"]
+                                    organism[i][j].mode_of_transit]["cost"] * self.__packages_list[i]["weight"]
                 if not is_transported:
                     storage_matrix[t][location] += self.__packages_list[i]["weight"]
                 # DEBUGGING
@@ -96,3 +100,49 @@ class TransportProblemObject:
                     # /DEBUGGING
                     return INF
         return cost
+
+    def generate_solution(self, max_len: int = 3):
+        if max_len < 1:
+            raise ValueError(f"Max chromosome length must be 1 or more, not: {max_len}")
+        genotype = []
+        modes_of_transit = ["train", "car", "plane"]
+        cities = [elem for elem in self.__cities_graph.nodes()]
+        for i in range(len(self)):
+            chromosome = []
+            for j in range(max_len - 1):
+                if uniform(0, 1) < 0.3:
+                    local_cities = deepcopy(cities)
+                    local_cities.remove(self.__packages_list[i]["city_to"])
+                    if chromosome:
+                        if chromosome[-1][0] in local_cities:
+                            local_cities.remove(chromosome[-1][0])
+                        date = chromosome[-1][1] + randint(0, 1)
+                        if len(chromosome) > 1:
+                            date += ceil(self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]]
+                                         [chromosome[-1][2]]["time"])
+                        else:
+                            date += ceil(self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
+                                         [chromosome[-1][2]]["time"])
+                    else:
+                        if self.__packages_list[i]["city_from"] in local_cities:
+                            local_cities.remove(self.__packages_list[i]["city_from"])
+                        date = self.__packages_list[i]["date_ready"]
+                    city = local_cities[randint(0, len(local_cities) - 1)]
+                    mode = modes_of_transit[randint(0, len(modes_of_transit) - 1)]
+                    chromosome.append((city, date, mode))
+            if chromosome:
+                date = chromosome[-1][1] + randint(0, 1)
+                if len(chromosome) > 1:
+                    date += ceil(self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]]
+                                 [chromosome[-1][2]]["time"])
+                else:
+                    date += ceil(
+                        self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
+                        [chromosome[-1][2]]["time"])
+            else:
+                date = self.__packages_list[i]["date_ready"]
+            mode = modes_of_transit[randint(0, len(modes_of_transit) - 1)]
+            chromosome.append((self.__packages_list[i]["city_to"], date, mode))
+            processed_chromosome = Chromosome([Gene(c,d,m) for c, d, m in chromosome])
+            genotype.append(processed_chromosome)
+        return Organism(Genotype(genotype), self)
