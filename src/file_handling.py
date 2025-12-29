@@ -97,7 +97,7 @@ def save_list_to_file(packages_list: list, filename: str) -> None:
 
         w1 = csv.DictWriter(file, fieldnames=labels, delimiter=";")
         w1.writeheader()
-        for i, package in enumerate(packages_list, start=1):
+        for i, package in enumerate(packages_list):
             package["number"] = i
             w1.writerow(package)
 

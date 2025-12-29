@@ -1,8 +1,11 @@
 from enum import Enum
 from copy import deepcopy
-from random import randint
-
+from random import randint, uniform
+from math import ceil
+INF = float("inf")
 import networkx as nx
+
+type reproduction_pairs = list[tuple[int, int]]
 
 
 class TransitMode(Enum):
@@ -10,10 +13,25 @@ class TransitMode(Enum):
     CAR = "car"
     TRAIN = "train"
 
+    def __str__(self):
+        return self.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        if hasattr(other, "value"):
+            return self.value == other.value
+        return self.value == other
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 class CrossingType(Enum):
-    ONE_CUT = "cut"
-    RANDOM_SELECTION = "random"
+    ONE_CUT = "one_cut"
+    RANDOM_CUT = "random_cuts"
+    RANDOM_SELECTION = "random_selection"
 
 
 class MutationType(Enum):
@@ -22,6 +40,13 @@ class MutationType(Enum):
     TRANSIT_MODE = "transit_mode"
     NEW_GENE = "new_gene"
     DELETE_GENE = "delete_gene"
+
+
+class SelectionType(Enum):
+    ROULETTE = "roulette"
+    RANKING = "ranking"
+    TOURNAMENT = "tournament"
+
 
 type PackagesList = list[tuple[str, int, TransitMode]]
 
@@ -162,13 +187,21 @@ class Organism:
     Represents one specific solution.
     """
 
-    def __init__(self, genotype: Genotype, problem: nx.MultiGraph):
-        if not isinstance(problem, nx.MultiGraph):
-            raise TypeError(f"Problem must be type of {nx.MultiGraph}, not {type(problem)}")
+    def __init__(self, genotype: Genotype, problem):
         if not isinstance(genotype, Genotype):
             raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
         self.__genotype = genotype
         self.__problem = problem
+        self.__cost = None
+
+    def __iter__(self):
+        return iter(self.__genotype)
+
+    def __getitem__(self, index):
+        return self.__genotype[index]
+
+    def __setitem__(self, index, value):
+        self.__genotype[index] = value
 
     def __len__(self):
         return len(self.__genotype)
@@ -176,14 +209,24 @@ class Organism:
     def __repr__(self):
         return str(self.__genotype)
 
-    def crossover(self, other, crossing_type: CrossingType):
+    def cost(self):
+        return self.__cost
+
+    def evaluate(self):
+        self.__cost = self.__problem.evaluate_function(self)
+
+    def is_evaluated(self):
+        return not self.__cost is None
+
+    def crossover(self, other, crossing_type: CrossingType | str):
+        if isinstance(crossing_type, str):
+            crossing_type = CrossingType(crossing_type)
         problem_size = len(self)
         match crossing_type:
             case CrossingType.ONE_CUT:
                 cut = randint(0, problem_size)
                 new_genotype = deepcopy(self.__genotype)[:cut] + deepcopy(other.__genotype)[cut:]
-                return Organism(new_genotype)
-            case CrossingType.RANDOM_SELECTION:
+            case CrossingType.RANDOM_CUT:
                 pattern = [randint(0, 1) for _ in range(problem_size)]
                 new_genotype = []
                 for i in range(problem_size):
@@ -191,29 +234,200 @@ class Organism:
                         new_genotype.append(deepcopy(self.__genotype[i]))
                     else:
                         new_genotype.append(deepcopy(other.__genotype[i]))
-        raise TypeError(f"'{crossing_type}' is not correct crossover type")
+            case CrossingType.RANDOM_SELECTION:
+                c_pattern = [randint(0, 1) for _ in range(problem_size)]
+                new_genotype = []
+                for i in range(problem_size):
+                    self_genes_list = [deepcopy(gene) for gene in self.__genotype[i]]
+                    other_genes_list = [deepcopy(gene) for gene in other.__genotype[i]]
+                    if c_pattern[i] == 0:
+                        last_gene = self_genes_list.pop()
+                        other_genes_list.pop()
+                    else:
+                        last_gene = other_genes_list.pop()
+                        self_genes_list.pop()
+                    all_genes_list = self_genes_list + other_genes_list
+                    all_genes_list.sort(key=lambda x: x.date)
+                    new_chromosome = []
+                    location = self.__problem.list[i]["city_from"]
+                    min_time = self.__problem.list[i]["date_ready"]
+                    for j in range(len(all_genes_list)):
+                        if all_genes_list[j].date < min_time or location == all_genes_list[j].city_to:
+                            continue
+                        if all_genes_list[j].date + self.__problem.graph[location][all_genes_list[j].city_to][
+                            all_genes_list[j].mode_of_transit]["time"] > last_gene.date:
+                            break
+                        if randint(0, 1) == 1:
+                            min_time = ceil(all_genes_list[j].date +
+                                            self.__problem.graph[location][all_genes_list[j].city_to][
+                                                all_genes_list[j].mode_of_transit]["time"])
+                            location = all_genes_list[j].city_to
+                            new_chromosome.append(deepcopy(all_genes_list[j]))
+                    new_chromosome.append(deepcopy(last_gene))
+                    new_genotype.append(Chromosome(deepcopy(new_chromosome)))
+            case _:
+                raise TypeError(f"'{crossing_type}' is not correct crossover type")
+        return Organism(Genotype(new_genotype), self.__problem)
 
-    def mutate(self, mutation_type: MutationType):
+    def mutate(self, mutation_type: MutationType | str):
+        if isinstance(mutation_type, str):
+            mutation_type = MutationType(mutation_type)
         problem_size = len(self)
         chromosome = randint(0, problem_size - 1)
         gene = randint(0, len(self.__genotype[chromosome]) - 1)
+        # DEBUGGING
+        # print(chromosome, gene)
+        # /DEBUGGING
         match mutation_type:
             case MutationType.CITY:
-                cities = list(self.__problem.nodes)
+                if len(self.__genotype[chromosome]) == 1:
+                    return
+                if gene == len(self.__genotype[chromosome]) - 1:
+                    gene -= 1
+                cities = list(self.__problem.graph.nodes)
                 cities.remove(self.__genotype[chromosome][gene].city_to)
-                new_city = cities[randint(0, len(cities) - 1)]
-                self.__genotype[chromosome][gene].city_to = new_city
-                return
+                if gene == 0 and self.__problem.list[chromosome]["city_from"] in cities:
+                    cities.remove(self.__problem.list[chromosome]["city_from"])
+                else:
+                    cities.remove(self.__genotype[chromosome][gene - 1].city_to)
+                if self.__genotype[chromosome][gene + 1].city_to in cities:
+                    cities.remove(self.__genotype[chromosome][gene + 1].city_to)
+                if not cities:
+                    return
+                city_to = cities[randint(0, len(cities) - 1)]
+                self.__genotype[chromosome][gene].city_to = city_to
             case MutationType.DATE:
-                pass
+                dt = randint(1, 2)
+                if randint(0, 1) == 1:
+                    self.__genotype[chromosome][gene].date += dt
+                else:
+                    self.__genotype[chromosome][gene].date -= dt if dt <= self.__genotype[chromosome][gene].date else \
+                        self.__genotype[chromosome][gene].date
             case MutationType.TRANSIT_MODE:
-                modes = [TransitMode.CAR, TransitMode.PLANE, TransitMode.TRAIN]
-                modes.remove(self.__genotype[chromosome][gene].mode_of_transit)
-                mode_of_transit = modes[randint(0, 1)]
+                match self.__genotype[chromosome][gene].mode_of_transit:
+                    case TransitMode.CAR:
+                        mode_of_transit = TransitMode.TRAIN if randint(0, 1) == 0 else TransitMode.PLANE
+                    case TransitMode.PLANE:
+                        mode_of_transit = TransitMode.TRAIN if randint(0, 1) == 0 else TransitMode.CAR
+                    case TransitMode.TRAIN:
+                        mode_of_transit = TransitMode.CAR if randint(0, 1) == 0 else TransitMode.PLANE
                 self.__genotype[chromosome][gene].mode_of_transit = mode_of_transit
                 return
             case MutationType.NEW_GENE:
-                pass
+                cities = list(self.__problem.graph.nodes)
+                if gene != 0:
+                    cities.remove(self.__genotype[chromosome][gene - 1].city_to)
+                if self.__genotype[chromosome][gene].city_to in cities:
+                    cities.remove(self.__genotype[chromosome][gene].city_to)
+                city_to = cities[randint(0, len(cities) - 1)]
+                date = randint(1, 2) + (
+                    self.__genotype[chromosome][gene - 1].date if gene != 0 else self.__problem.list[chromosome][
+                        "date_ready"])
+                rand_idx = randint(0, 2)
+                mode_of_transit = TransitMode.TRAIN if rand_idx == 0 else TransitMode.PLANE if rand_idx == 1 else TransitMode.CAR
+                try:
+                    self.__genotype[chromosome].insert(gene, Gene(city_to, date, mode_of_transit))
+                except ValueError:
+                    # DEBUGGING
+                    # print("Mutation error")
+                    # /DEBUGGING
+                    pass
             case MutationType.DELETE_GENE:
-                pass
-        raise ValueError(f"{mutation_type} is not correct type of mutation")
+                if len(self.__genotype[chromosome]) == 1:
+                    # DEBUGGING
+                    # print("Mutation error")
+                    # /DEBUGGING
+                    return
+                if gene == len(self.__genotype[chromosome]) - 1:
+                    gene -= 1
+                self.__genotype[chromosome].pop(gene)
+            case _:
+                raise ValueError(f"{mutation_type} is not correct type of mutation")
+
+
+class Population:
+    """
+    Represents a generation of solutions.
+    """
+
+    def __init__(self, organisms_list: list[Organism]):
+        self.__organisms = []
+        for organism in organisms_list:
+            if not isinstance(organism, Organism):
+                raise TypeError(f"Organism must be type of {Organism}, not {type(organism)}")
+        self.__organisms = deepcopy(organisms_list)
+
+    def __iter__(self):
+        return iter(self.__organisms)
+
+    def __getitem__(self, index):
+        return self.__organisms[index]
+
+    def __setitem__(self, index, value):
+        self.__organisms[index] = value
+
+    def __len__(self):
+        return len(self.__organisms)
+
+    def mean_cost(self):
+        sum_cost = 0.0
+        organism_number = 0
+        for organism in self.__organisms:
+            if organism.cost() != INF:
+                sum_cost += organism.cost()
+                organism_number += 1
+        return sum_cost / organism_number if organism_number != 0 else INF
+
+    def best(self):
+        population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
+        population_copy.sort(key=lambda x: x[1].cost())
+        return deepcopy(population_copy[0][1])
+
+    def selection(self, selection_type: SelectionType | str, parent_percent: float) -> list[tuple[int, int]]:
+        if isinstance(selection_type, str):
+            selection_type = SelectionType(selection_type)
+        parents_number = ceil(len(self) * parent_percent)
+        if parents_number % 2 == 1:
+            parents_number += 1
+        if parents_number < 2:
+            raise ValueError(f"Too few organisms to be selected")
+        if parents_number > len(self):
+            raise ValueError(f"Too many organisms to be selected")
+        for organism in self.__organisms:
+            if not organism.is_evaluated():
+                organism.evaluate()
+        match selection_type:
+            case SelectionType.ROULETTE:
+                raise NotImplementedError()
+            case SelectionType.RANKING:
+                population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
+                population_copy.sort(key=lambda x: x[1].cost())
+                population_copy = population_copy[:parents_number]
+                pairs = []
+                for _ in range(parents_number // 2):
+                    organism1 = population_copy.pop(randint(0, len(population_copy) - 1))[0]
+                    organism2 = population_copy.pop(randint(0, len(population_copy) - 1))[0]
+                    pairs.append((organism1, organism2))
+            case SelectionType.TOURNAMENT:
+                raise NotImplementedError()
+            case _:
+                raise TypeError(f"'{selection_type}' is not correct selection type")
+        return pairs
+
+    def reproduction(self, pairs: reproduction_pairs, crossing_types: list[CrossingType | str],
+                     mutation_types: list[MutationType | str], mutation_chance: float) -> None:
+        new_generation = []
+        for idx1, idx2 in pairs:
+            for _ in range(2):
+                crossing_type = crossing_types[randint(0, len(crossing_types) - 1)]
+                child = self.__organisms[idx1].crossover(self.__organisms[idx2], crossing_type)
+                if uniform(0, 1) < mutation_chance:
+                    mutation_type = mutation_types[randint(0, len(mutation_types) - 1)]
+                    child.mutate(mutation_type)
+                new_generation.append(child)
+        all_organisms = deepcopy(self.__organisms) + new_generation
+        for organism in all_organisms:
+            if not organism.is_evaluated():
+                organism.evaluate()
+        all_organisms.sort(key=lambda x: x.cost())
+        self.__organisms = deepcopy(all_organisms[:len(self.__organisms)])

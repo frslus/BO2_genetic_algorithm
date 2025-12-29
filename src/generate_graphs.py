@@ -320,7 +320,6 @@ def johnson(graph: nx.MultiGraph, layer1: str, layer2: str, path_layer: str = "p
     param_dict = {}
     for i, node1 in enumerate(nodes_list[:-1]):
         d, prev = dijkstra(graph, node1, layer1, layer2)
-        print(d)
         for node2 in nodes_list[i + 1:]:
             p = [node2]
             while prev[p[0]] != node1:

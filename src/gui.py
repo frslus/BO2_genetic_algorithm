@@ -65,7 +65,7 @@ class GUI:
         # checkboxes
         self.checklabels = {name: tk.Label() for name in CHECKBOX_LABELS}
         self.checktype = {name: tk.IntVar(value=1) for name in CHECKBOX_LABELS}
-        self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(3)]
+        self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(5)]
         self.checklists = {name: tk.Frame(self.root) for name in CHECKBOX_LABELS}
 
         # generate solution button
@@ -432,10 +432,10 @@ class GUI:
                                 variable=mutation_type[2])
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
         check4 = tk.Checkbutton(self.checklists['mutation'], text="Dodatek genu", font=(self.font, self.font_size2),
-                                variable=mutation_type[2])
+                                variable=mutation_type[3])
         check4.grid(row=4, column=0, sticky=tk.W + tk.E)
         check5 = tk.Checkbutton(self.checklists['mutation'], text="Usunięcie genu", font=(self.font, self.font_size2),
-                                variable=mutation_type[2])
+                                variable=mutation_type[4])
         check5.grid(row=5, column=0, sticky=tk.W + tk.E)
 
         self.checklists['mutation'].place(**MUTATION_SELECT_POS)
