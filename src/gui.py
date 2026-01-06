@@ -15,8 +15,8 @@ POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
-#graph buttons
-GRAPHBUTTON_LABELS = ["Wykresy","Graf"]
+# graph buttons
+GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
 CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.92}
 SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.92}
 
@@ -25,7 +25,7 @@ TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacj
                   "Limit pokoleń (ogólny)"]
 # TEXTBOX_VALUES = [100, 25, 5, 100, 9999]
 CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
-FIGURE_LAYERS = ["cost", "population", "time","city_graph"]
+FIGURE_LAYERS = ["cost", "population", "time", "city_graph"]
 
 # algorithm parameter selection positions
 NUMBER_PARAMS_POS = {"relx": 0.57, "rely": 0.3}
@@ -35,6 +35,7 @@ MUTATION_SELECT_POS = {"relx": 0.83, "rely": 0.6}
 
 GENERATE_SOLUTION_POS = {"relx": 0.57, "rely": 0.7}
 CHECKBOX_POS = {"relx": 0.6, "rely": 0.77}
+
 
 class GUI:
     """
@@ -47,6 +48,9 @@ class GUI:
         self.font_size1 = FONT_SIZE
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
+
+        # config
+        self.config = {}
 
         # init window
         self.root = tk.Tk()
@@ -185,9 +189,9 @@ class GUI:
         self.graphbuttons[0].place_forget()
         self.graphbuttons[1].place_forget()
         self.graphbuttons[0] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[0], font=(self.font, self.font_size2),
-                                    command=self.show_graphs)
+                                         command=self.show_graphs)
         self.graphbuttons[1] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[1], font=(self.font, self.font_size2),
-                                    command=self.show_city_graph)
+                                         command=self.show_city_graph)
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
@@ -271,7 +275,7 @@ class GUI:
         clear algorithm iteration graphs
         :return: None
         """
-        for _,graph in self.canvas.items():
+        for _, graph in self.canvas.items():
             graph.get_tk_widget().place_forget()
 
     def update_city_graph(self, fig: Figure = None) -> None:
@@ -355,7 +359,7 @@ class GUI:
         self.view_menu.add_separator()
 
         self.view_menu.add_command(label="Przywróć rozmiar tekstu", command=self.reset_font_size)
-        self.view_menu.add_command(label="TEST1", command=self.clear_everything)
+        self.view_menu.add_command(label="TEST1", command=self.update_config)
         self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
         self.menu_bar.add_cascade(menu=self.view_menu, label="Widok")
@@ -563,6 +567,48 @@ class GUI:
                                message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
             # TODO: implement me!
             pass
+
+    def update_config(self) -> None:
+        """
+        update self.config with data pulled from gui
+        :return: None
+        """
+        config = self.config
+
+        # #textbox data
+        # print(self.textboxes[0].get('1.0', tk.END))
+        # config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
+        # config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip())/100
+        # config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip())/100
+        # config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
+        # config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
+
+        #selection checkbox
+        selection_type = self.checktype['selection']
+        config["selection_type"] = "t" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
+
+        #crossing checkbox
+        crossing_type = self.checktype['crossing']
+        config["crossing_types"] = "symetric" if crossing_type == 1 else ("asymetric" if crossing_type == 2 else "polycrossing")
+        #["random_selection", "random_cuts"]
+
+        #mutation checkbox
+        mutations = self.checktype['mutations']
+        mutations_list = []
+        if mutations[0]:
+            mutations_list.append("city")
+        if mutations[1]:
+            mutations_list.append("date")
+        if mutations[2]:
+            mutations_list.append("transit_mode")
+        if mutations[3]:
+            mutations_list.append("new_gene")
+        if mutations[4]:
+            mutations_list.append("delete_gene")
+        config["mutation_types"] = mutations_list
+
+        print(self.config)
+        return
 
     def save_config(self):
         """
