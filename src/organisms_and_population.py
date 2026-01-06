@@ -210,6 +210,8 @@ class Organism:
         return str(self.__genotype)
 
     def cost(self):
+        if self.__cost is None:
+            self.evaluate()
         return self.__cost
 
     def evaluate(self):

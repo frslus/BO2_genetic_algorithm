@@ -251,7 +251,7 @@ def main():
     print((1000 - inf_cnt), "/", 1000)
     print()
 
-    best_one = genetic_algorithm(tprob)
+    best_one = genetic_algorithm(tprob, "data/test_config.txt")
     print(best_one)
 
 
