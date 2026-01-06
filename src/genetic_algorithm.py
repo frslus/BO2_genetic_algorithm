@@ -38,8 +38,9 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str) -> Orga
     while len(alive_organisms) + len(dead_organisms) < population_size:
         new_organism = problem.generate_solution(generated_chromosome_max_length, addition_chance)
         new_organism.evaluate()
-        if new_organism.cost() == INF and len(dead_organisms) < population_size - alive_number:
-            dead_organisms.append(new_organism)
+        if new_organism.cost() == INF:
+            if len(dead_organisms) < population_size - alive_number:
+                dead_organisms.append(new_organism)
         else:
             alive_organisms.append(new_organism)
     population = Population(alive_organisms + dead_organisms)
