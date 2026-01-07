@@ -2,6 +2,7 @@ from enum import Enum
 from copy import deepcopy
 from random import randint, uniform
 from math import ceil, floor
+import csv
 
 INF = float("inf")
 import networkx as nx
@@ -13,6 +14,9 @@ class TransitMode(Enum):
     PLANE = "plane"
     CAR = "car"
     TRAIN = "train"
+
+    def __repr__(self):
+        return self.value
 
     def __str__(self):
         return self.value
@@ -221,6 +225,9 @@ class Organism:
     def is_evaluated(self):
         return not self.__cost is None
 
+    def link_problem(self, problem):
+        self.__problem = problem
+
     def crossover(self, other, crossing_type: CrossingType | str):
         if isinstance(crossing_type, str):
             crossing_type = CrossingType(crossing_type)
@@ -348,13 +355,61 @@ class Organism:
                 raise ValueError(f"{mutation_type} is not correct type of mutation")
 
 
+def save_population_to_file(filename: str, population):
+    organisms_list = [deepcopy(elem) for elem in population]
+    organisms_number = len(organisms_list)
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        w0 = csv.DictWriter(file, fieldnames=["population_size"], delimiter=";")
+        w0.writeheader()
+        w0.writerow({"population_size": organisms_number})
+        w1 = csv.DictWriter(file, fieldnames=[f"organism_size"], delimiter=";")
+        w1.writeheader()
+        w1.writerow({"organism_size": len(organisms_list[0])})
+        for i in range(organisms_number):
+            w2 = csv.DictWriter(file, fieldnames=[f"organism_{i}"], delimiter=";")
+            w2.writeheader()
+            for j, chromosome in enumerate(organisms_list[i]):
+                w3 = csv.DictWriter(file, fieldnames=[f"chromosome_{j}"], delimiter=";")
+                w3.writeheader()
+                w3.writerow({f"chromosome_{j}": len(chromosome)})
+                w4 = csv.DictWriter(file, fieldnames=["city_to", "date", "mode_of_transit"], delimiter=";")
+                w4.writeheader()
+                for gene in chromosome:
+                    w4.writerow({"city_to": gene.city_to, "date": gene.date,"mode_of_transit": str(gene.mode_of_transit)})
+
+def load_population_from_file(filename: str):
+    organisms_list = []
+    labels = [("city_to", str), ("date", int), ("mode_of_transit", str)]
+    with open(filename, mode="r", encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter=";")
+        next(reader)
+        organisms_number = int(next(reader)[0])
+        next(reader)
+        organism_size = int(next(reader)[0])
+        for _ in range(organisms_number):
+            next(reader)
+            chromosomes = []
+            for _ in range(organism_size):
+                next(reader)
+                chromosome_length = int(next(reader)[0])
+                next(reader)
+                genes = []
+                for _ in range(chromosome_length):
+                    city_to, date, mode_of_transit = next(reader)
+                    genes.append(Gene(city_to, int(date), mode_of_transit))
+                chromosomes.append(Chromosome(genes))
+            organisms_list.append(Organism(Genotype(chromosomes), None))
+    return organisms_list
+
 class Population:
     """
     Represents a generation of solutions.
     """
 
-    def __init__(self, organisms_list: list[Organism]):
+    def __init__(self, organisms_list: list[Organism] | str):
         self.__organisms = []
+        if isinstance(organisms_list, str):
+            organisms_list = load_population_from_file(organisms_list)
         for organism in organisms_list:
             if not isinstance(organism, Organism):
                 raise TypeError(f"Organism must be type of {Organism}, not {type(organism)}")
@@ -390,6 +445,10 @@ class Population:
         population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
         population_copy.sort(key=lambda x: x[1].cost() if x[1].cost() != INF else 0, reverse=True)
         return deepcopy(population_copy[0][1])
+
+    def link_problem(self, problem):
+        for organism in self.__organisms:
+            organism.link_problem(problem)
 
     def selection(self, selection_type: SelectionType | str, parent_percent: float) -> list[tuple[int, int]]:
         if isinstance(selection_type, str):
@@ -513,4 +572,3 @@ class Population:
                 organism.evaluate()
         old_generation.sort(key=lambda x: x.cost())
         self.__organisms = deepcopy(new_generation + old_generation[:missing_elements])
-        print(len(self.__organisms))

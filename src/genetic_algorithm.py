@@ -10,10 +10,11 @@ DEFAULT_GENERATED_CHROMOSOME_MAX_LENGTH = 4
 DEFAULT_ADDITION_CHANCE = 0.3
 
 
-def genetic_algorithm(problem: TransportProblemObject, config_file: str,
-                      extra_data: dict | None = None) -> Organism:
-    with open(config_file, mode="r", encoding="utf-8") as file:
-        params = json.load(file)
+def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
+                      extra_data: dict | None = None, initial_population: Population | None = None) -> Organism:
+    if isinstance(config_file, str):
+        with open(config_file, mode="r", encoding="utf-8") as file:
+            params = json.load(file)
 
     # parameters from configuration file
     population_size = params["population_size"]
@@ -39,15 +40,18 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str,
         extra_data["mean_in_iter"] = []
 
     # initial population generation
-    while len(alive_organisms) + len(dead_organisms) < population_size:
-        new_organism = problem.generate_solution(generated_chromosome_max_length, addition_chance)
-        new_organism.evaluate()
-        if new_organism.cost() == INF:
-            if len(dead_organisms) < population_size - alive_number:
-                dead_organisms.append(new_organism)
-        else:
-            alive_organisms.append(new_organism)
-    population = Population(alive_organisms + dead_organisms)
+    if initial_population is not None:
+        population = initial_population
+    else:
+        while len(alive_organisms) + len(dead_organisms) < population_size:
+            new_organism = problem.generate_solution(generated_chromosome_max_length, addition_chance)
+            new_organism.evaluate()
+            if new_organism.cost() == INF:
+                if len(dead_organisms) < population_size - alive_number:
+                    dead_organisms.append(new_organism)
+            else:
+                alive_organisms.append(new_organism)
+        population = Population(alive_organisms + dead_organisms)
 
     # main algorithm
     best_score = population.best().cost()
