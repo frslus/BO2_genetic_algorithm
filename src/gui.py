@@ -1,4 +1,5 @@
 import tkinter as tk
+from json import dumps, dump
 from math import ceil
 from tkinter import messagebox
 
@@ -15,8 +16,8 @@ POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
-#graph buttons
-GRAPHBUTTON_LABELS = ["Wykresy","Graf"]
+# graph buttons
+GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
 CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.92}
 SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.92}
 
@@ -25,7 +26,7 @@ TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacj
                   "Limit pokoleń (ogólny)"]
 # TEXTBOX_VALUES = [100, 25, 5, 100, 9999]
 CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
-FIGURE_LAYERS = ["cost", "population", "time","city_graph"]
+FIGURE_LAYERS = ["cost", "population", "time", "city_graph"]
 
 # algorithm parameter selection positions
 NUMBER_PARAMS_POS = {"relx": 0.57, "rely": 0.3}
@@ -35,6 +36,7 @@ MUTATION_SELECT_POS = {"relx": 0.83, "rely": 0.6}
 
 GENERATE_SOLUTION_POS = {"relx": 0.57, "rely": 0.7}
 CHECKBOX_POS = {"relx": 0.6, "rely": 0.77}
+
 
 class GUI:
     """
@@ -48,7 +50,7 @@ class GUI:
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
 
-        #config
+        # config
         self.config = {}
 
         # init window
@@ -190,9 +192,9 @@ class GUI:
         self.graphbuttons[0].place_forget()
         self.graphbuttons[1].place_forget()
         self.graphbuttons[0] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[0], font=(self.font, self.font_size2),
-                                    command=self.show_graphs)
+                                         command=self.show_graphs)
         self.graphbuttons[1] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[1], font=(self.font, self.font_size2),
-                                    command=self.show_city_graph)
+                                         command=self.show_city_graph)
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
@@ -276,7 +278,7 @@ class GUI:
         clear algorithm iteration graphs
         :return: None
         """
-        for _,graph in self.canvas.items():
+        for _, graph in self.canvas.items():
             graph.get_tk_widget().place_forget()
 
     def update_city_graph(self, fig: Figure = None) -> None:
@@ -507,20 +509,22 @@ class GUI:
 
         # #textbox data
         config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
-        config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip())/100
-        config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip())/100
+        config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip()) / 100
+        config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip()) / 100
         config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
         config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
 
-        #selection checkbox
+        # selection checkbox
         selection_type = self.checktype['selection'].get()
-        config["selection_type"] = "tournament" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
+        config["selection_type"] = "tournament" if selection_type == 1 else (
+            "ranking" if selection_type == 2 else "roulette")
 
-        #crossing checkbox
+        # crossing checkbox
         crossing_type = self.checktype['crossing'].get()
-        config["crossing_types"] = "one_cut" if crossing_type == 1 else ("random_cuts" if crossing_type == 2 else "random_selection")
+        config["crossing_types"] = "one_cut" if crossing_type == 1 else (
+            "random_cuts" if crossing_type == 2 else "random_selection")
 
-        #mutation checkbox
+        # mutation checkbox
         mutations = self.checktype['mutation']
         mutations_list = []
         if mutations[0].get():
@@ -551,8 +555,6 @@ class GUI:
             print("INF")
         else:
             print(9999)
-
-
 
     # file handling
     def load_graph(self):
@@ -614,15 +616,21 @@ class GUI:
             # TODO: implement me!
             pass
 
-    def save_config(self):
+    def save_config(self, filename: str = "config") -> None:
         """
         Save view settings config to .json
-        :return:
+        :param filename: Name of the file to save to
+        :return: None
         """
-        if messagebox.askyesno(title="Zapisz ustawienia",
-                               message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Zapisz ustawienia",
+                                   message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
+            return
+        config = dumps(self.config, indent=4)
+
+        path = f"../data/{filename}.json"
+        print(path)
+        with open(path, mode="w", newline="", encoding="utf-8") as file:
+            dump(config, file)
 
     def load_config(self):
         """
