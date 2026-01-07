@@ -9,8 +9,10 @@ class TransportProblemObject:
         self.__cities_graph = None
         self.__packages_list = None
         self.__timespan = None
-        self.reload_graph(cities_graph)
-        self.reload_list(packages_list)
+        if cities_graph is not None:
+            self.reload_graph(cities_graph)
+        if packages_list is not None:
+            self.reload_list(packages_list)
 
     def __getattr__(self, item):
         if item == "graph":

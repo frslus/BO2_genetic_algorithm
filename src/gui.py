@@ -1,5 +1,8 @@
 import tkinter as tk
-from json import dumps, dump
+import file_handling
+import problem_description
+
+from json import dumps, dump, load
 from math import ceil
 from tkinter import messagebox
 
@@ -52,6 +55,7 @@ class GUI:
 
         # config
         self.config = {}
+        # self.config = {"transport problem": problem_description.TransportProblemObject()} TODO: add __repr__ method to TSP()
 
         # init window
         self.root = tk.Tk()
@@ -557,15 +561,20 @@ class GUI:
             print(9999)
 
     # file handling
-    def load_graph(self):
+    def load_graph(self,filename:str = "graph.csv"):
         """
         Handle loading graph from  .csv
         :return:
         """
-        if messagebox.askyesno(title="Załaduj miasta",
+        if not messagebox.askyesno(title="Załaduj miasta",
                                message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
-            # TODO: implement me!
-            pass
+            return
+
+        try:
+            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
+        except KeyError:
+
+            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
 
     def load_population(self):
         """
@@ -619,28 +628,40 @@ class GUI:
     def save_config(self, filename: str = "config") -> None:
         """
         Save view settings config to .json
-        :param filename: Name of the file to save to
+        :param filename: Name of the config file to save to. Must be .json
         :return: None
         """
         if not messagebox.askyesno(title="Zapisz ustawienia",
                                    message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
             return
-        config = dumps(self.config, indent=4)
+        config = dumps(self.config)
 
+        # save to data/filename.json
         path = f"../data/{filename}.json"
-        print(path)
-        with open(path, mode="w", newline="", encoding="utf-8") as file:
+        with open(path, mode="w") as file:
             dump(config, file)
 
-    def load_config(self):
+    def load_config(self, filename: str = "config") -> None:
         """
         Load view settings config from .json
-        :return:
+        :param filename: Name of the config file to load from. Must be .json
+        :return: None
         """
-        if messagebox.askyesno(title="Załaduj",
+        if not messagebox.askyesno(title="Załaduj",
                                message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
-            # TODO: implement me!
-            pass
+            return
+
+        path = f"../data/{filename}.json"
+        with open(path,mode="r", newline="", encoding="utf-8") as file:
+            self.config = load(file)
+
+    # def update_from_config(self) -> None:
+    #     """
+    #     Update checkboxes in gui from current self.config
+    #     :return:
+    #     """
+    #     for key in CHECKBOX_LABELS:
+    #         self.checktype[key].set(self.config[key])
 
 
 if __name__ == '__main__':
