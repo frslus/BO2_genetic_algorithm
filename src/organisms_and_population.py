@@ -413,7 +413,7 @@ class Population:
                 delta_cost = max_cost - min_cost
                 pool = 0
                 tickets = [0 for _ in range(len(self))]
-                if population_copy[0][1] == INF:
+                if population_copy[0][1].cost() == INF:
                     pool += 1
                     tickets[0] = 1
                 else:
@@ -506,9 +506,11 @@ class Population:
                     mutation_type = mutation_types[randint(0, len(mutation_types) - 1)]
                     child.mutate(mutation_type)
                 new_generation.append(child)
-        all_organisms = deepcopy(self.__organisms) + new_generation
-        for organism in all_organisms:
+        missing_elements = len(self.__organisms) - len(new_generation)
+        old_generation = deepcopy(self.__organisms)
+        for organism in old_generation:
             if not organism.is_evaluated():
                 organism.evaluate()
-        all_organisms.sort(key=lambda x: x.cost())
-        self.__organisms = deepcopy(all_organisms[:len(self.__organisms)])
+        old_generation.sort(key=lambda x: x.cost())
+        self.__organisms = deepcopy(new_generation + old_generation[:missing_elements])
+        print(len(self.__organisms))

@@ -1,4 +1,5 @@
 from src.genetic_algorithm import *
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -251,8 +252,15 @@ def main():
     print((1000 - inf_cnt), "/", 1000)
     print()
 
-    best_one = genetic_algorithm(tprob, "data/test_config.txt")
+    extra_data = {}
+    best_one = genetic_algorithm(tprob, "data/test_config.txt", extra_data)
     print(best_one)
+
+    vx = [i for i in range(len(extra_data["best_overall"]))]
+    plt.plot(vx, extra_data["best_overall"], "r-")
+    plt.plot(vx, extra_data["mean_in_iter"], "b-")
+    plt.legend(["best_overall", "mean_in_iter"])
+    plt.show()
 
 
 if __name__ == '__main__':

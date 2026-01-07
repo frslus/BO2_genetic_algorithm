@@ -10,7 +10,8 @@ DEFAULT_GENERATED_CHROMOSOME_MAX_LENGTH = 4
 DEFAULT_ADDITION_CHANCE = 0.3
 
 
-def genetic_algorithm(problem: TransportProblemObject, config_file: str) -> Organism:
+def genetic_algorithm(problem: TransportProblemObject, config_file: str,
+                      extra_data: dict | None = None) -> Organism:
     with open(config_file, mode="r", encoding="utf-8") as file:
         params = json.load(file)
 
@@ -33,6 +34,9 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str) -> Orga
     alive_number = ceil(population_size * alive_percent)
     alive_organisms = []
     dead_organisms = []
+    if extra_data is not None:
+        extra_data["best_overall"] = []
+        extra_data["mean_in_iter"] = []
 
     # initial population generation
     while len(alive_organisms) + len(dead_organisms) < population_size:
@@ -54,10 +58,14 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str) -> Orga
         if population.best().cost() < best_score:
             best_score = population.best().cost()
             best_score_iter = i
+        if extra_data is not None:
+            extra_data["best_overall"].append(best_score)
+            extra_data["mean_in_iter"].append(population.mean_cost())
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
-        print(f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
+        print(
+            f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
     else:
         print(f"Algorithm stopped - iteration limit reached")
     return population.best()
