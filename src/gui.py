@@ -512,26 +512,25 @@ class GUI:
         # config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
 
         #selection checkbox
-        selection_type = self.checktype['selection']
+        selection_type = self.checktype['selection'].get()
         config["selection_type"] = "tournament" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
 
         #crossing checkbox
-        crossing_type = self.checktype['crossing']
+        crossing_type = self.checktype['crossing'].get()
         config["crossing_types"] = "one_cut" if crossing_type == 1 else ("random_cuts" if crossing_type == 2 else "random_selection")
-        #["random_selection", "random_cuts"]
 
         #mutation checkbox
         mutations = self.checktype['mutation']
         mutations_list = []
-        if mutations[0]:
+        if mutations[0].get():
             mutations_list.append("city")
-        if mutations[1]:
+        if mutations[1].get():
             mutations_list.append("date")
-        if mutations[2]:
+        if mutations[2].get():
             mutations_list.append("transit_mode")
-        if mutations[3]:
+        if mutations[3].get():
             mutations_list.append("new_gene")
-        if mutations[4]:
+        if mutations[4].get():
             mutations_list.append("delete_gene")
         config["mutation_types"] = mutations_list
 
