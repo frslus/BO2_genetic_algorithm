@@ -101,7 +101,7 @@ class TransportProblemObject:
                     return INF
         return cost
 
-    def generate_solution(self, max_len: int = 3):
+    def generate_solution(self, max_len: int = 3, addition_chance: float = 0.3):
         if max_len < 1:
             raise ValueError(f"Max chromosome length must be 1 or more, not: {max_len}")
         genotype = []
@@ -110,7 +110,7 @@ class TransportProblemObject:
         for i in range(len(self)):
             chromosome = []
             for j in range(max_len - 1):
-                if uniform(0, 1) < 0.3:
+                if uniform(0, 1) < addition_chance:
                     local_cities = deepcopy(cities)
                     local_cities.remove(self.__packages_list[i]["city_to"])
                     if chromosome:

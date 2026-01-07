@@ -1,7 +1,8 @@
 from enum import Enum
 from copy import deepcopy
 from random import randint, uniform
-from math import ceil
+from math import ceil, floor
+
 INF = float("inf")
 import networkx as nx
 
@@ -211,6 +212,8 @@ class Organism:
         return str(self.__genotype)
 
     def cost(self):
+        if self.__cost is None:
+            self.evaluate()
         return self.__cost
 
     def evaluate(self):
@@ -384,6 +387,11 @@ class Population:
         population_copy.sort(key=lambda x: x[1].cost())
         return deepcopy(population_copy[0][1])
 
+    def worst(self):
+        population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
+        population_copy.sort(key=lambda x: x[1].cost() if x[1].cost() != INF else 0, reverse=True)
+        return deepcopy(population_copy[0][1])
+
     def selection(self, selection_type: SelectionType | str, parent_percent: float) -> list[tuple[int, int]]:
         if isinstance(selection_type, str):
             selection_type = SelectionType(selection_type)
@@ -397,20 +405,93 @@ class Population:
         for organism in self.__organisms:
             if not organism.is_evaluated():
                 organism.evaluate()
+        population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
+        pairs = []
         match selection_type:
             case SelectionType.ROULETTE:
-                raise NotImplementedError()
+                min_cost = self.best().cost()
+                max_cost = self.worst().cost()
+                delta_cost = max_cost - min_cost
+                pool = 0
+                tickets = [0 for _ in range(len(self))]
+                if population_copy[0][1].cost() == INF:
+                    pool += 1
+                    tickets[0] = 1
+                else:
+                    if delta_cost == 0:
+                        tickets_number = 100
+                    else:
+                        tickets_number = 100 - ceil(90 * ((population_copy[0][1].cost() - min_cost) / delta_cost))
+                    pool += tickets_number
+                    tickets[0] = tickets_number
+                for idx, elem in population_copy[1:]:
+                    if elem.cost() == INF:
+                        pool += 1
+                        tickets[idx] = 1
+                    else:
+                        if delta_cost == 0:
+                            tickets_number = 100
+                        else:
+                            tickets_number = 100 - ceil(90 * ((elem.cost() - min_cost) / delta_cost))
+                        pool += tickets_number
+                        tickets[idx] = tickets_number
+                for _ in range(parents_number // 2):
+                    ticket1 = randint(0, pool - 1)
+                    organism1 = 0
+                    while ticket1 > tickets[organism1]:
+                        ticket1 -= tickets[organism1]
+                        organism1 += 1
+                    pool -= tickets[organism1]
+                    tickets[organism1] = 0
+                    ticket2 = randint(0, pool - 1)
+                    organism2 = 0
+                    while ticket2 > tickets[organism2]:
+                        ticket2 -= tickets[organism2]
+                        organism2 += 1
+                    pool -= tickets[organism2]
+                    tickets[organism2] = 0
+                    pairs.append((organism1, organism2))
+                # print(pairs)
             case SelectionType.RANKING:
-                population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
                 population_copy.sort(key=lambda x: x[1].cost())
                 population_copy = population_copy[:parents_number]
-                pairs = []
                 for _ in range(parents_number // 2):
                     organism1 = population_copy.pop(randint(0, len(population_copy) - 1))[0]
                     organism2 = population_copy.pop(randint(0, len(population_copy) - 1))[0]
                     pairs.append((organism1, organism2))
             case SelectionType.TOURNAMENT:
-                raise NotImplementedError()
+                group_max_len = floor(len(self) / parents_number)
+                groups_unready = [[None for _ in range(group_max_len)] for _ in range(parents_number)]
+                groups_ready = []
+                for i in range(len(self) - group_max_len * parents_number):
+                    groups_unready[i].append(None)
+                for _ in range(len(self)):
+                    elem = population_copy.pop(randint(0, len(population_copy) - 1))
+                    i = randint(0, len(groups_unready) - 1)
+                    groups_unready[i].insert(0, elem)
+                    groups_unready[i].pop()
+                    if groups_unready[i][-1] is not None:
+                        full_group = groups_unready.pop(i)
+                        groups_ready.append(full_group)
+                for i in range(parents_number // 2):
+                    organism1 = groups_ready[2 * i][0]
+                    # print(organism1[0], organism1[1].cost())
+                    for j in range(1, len(groups_ready[2 * i])):
+                        # print(groups_ready[2 * i][j][0], groups_ready[2 * i][j][1].cost())
+                        if organism1[1].cost() > groups_ready[2 * i][j][1].cost():
+                            organism1 = groups_ready[2 * i][j]
+                    # print(organism1[0])
+                    # print()
+                    organism2 = groups_ready[2 * i + 1][0]
+                    # print(organism2[0], organism2[1].cost())
+                    for j in range(1, len(groups_ready[2 * i + 1])):
+                        # print(groups_ready[2 * i + 1][j][0], groups_ready[2 * i + 1][j][1].cost())
+                        if organism2[1].cost() > groups_ready[2 * i + 1][j][1].cost():
+                            organism2 = groups_ready[2 * i + 1][j]
+                    pairs.append((organism1[0], organism2[0]))
+                    # print(organism2[0])
+                    # print()
+                # print(pairs)
             case _:
                 raise TypeError(f"'{selection_type}' is not correct selection type")
         return pairs
@@ -426,9 +507,11 @@ class Population:
                     mutation_type = mutation_types[randint(0, len(mutation_types) - 1)]
                     child.mutate(mutation_type)
                 new_generation.append(child)
-        all_organisms = deepcopy(self.__organisms) + new_generation
-        for organism in all_organisms:
+        missing_elements = len(self.__organisms) - len(new_generation)
+        old_generation = deepcopy(self.__organisms)
+        for organism in old_generation:
             if not organism.is_evaluated():
                 organism.evaluate()
-        all_organisms.sort(key=lambda x: x.cost())
-        self.__organisms = deepcopy(all_organisms[:len(self.__organisms)])
+        old_generation.sort(key=lambda x: x.cost())
+        self.__organisms = deepcopy(new_generation + old_generation[:missing_elements])
+        print(len(self.__organisms))
