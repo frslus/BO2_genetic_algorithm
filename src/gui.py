@@ -48,6 +48,9 @@ class GUI:
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
 
+        #config
+        self.config = {}
+
         # init window
         self.root = tk.Tk()
 
@@ -355,7 +358,7 @@ class GUI:
         self.view_menu.add_separator()
 
         self.view_menu.add_command(label="Przywróć rozmiar tekstu", command=self.reset_font_size)
-        self.view_menu.add_command(label="TEST1", command=self.clear_everything)
+        self.view_menu.add_command(label="TEST1", command=self.update_config)
         self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
         self.menu_bar.add_cascade(menu=self.view_menu, label="Widok")
@@ -503,6 +506,48 @@ class GUI:
             print("INF")
         else:
             print(9999)
+
+    def update_config(self) -> None:
+        """
+        update self.config with data pulled from gui
+        :return: None
+        """
+        config = self.config
+
+        # #textbox data
+        # print(self.textboxes[0].get('1.0', tk.END))
+        # config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
+        # config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip())/100
+        # config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip())/100
+        # config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
+        # config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
+
+        #selection checkbox
+        selection_type = self.checktype['selection']
+        config["selection_type"] = "t" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
+
+        #crossing checkbox
+        crossing_type = self.checktype['crossing']
+        config["crossing_types"] = "symetric" if crossing_type == 1 else ("asymetric" if crossing_type == 2 else "polycrossing")
+        #["random_selection", "random_cuts"]
+
+        #mutation checkbox
+        mutations = self.checktype['mutations']
+        mutations_list = []
+        if mutations[0]:
+            mutations_list.append("city")
+        if mutations[1]:
+            mutations_list.append("date")
+        if mutations[2]:
+            mutations_list.append("transit_mode")
+        if mutations[3]:
+            mutations_list.append("new_gene")
+        if mutations[4]:
+            mutations_list.append("delete_gene")
+        config["mutation_types"] = mutations_list
+
+        print(self.config)
+        return
 
     # file handling
     def load_graph(self):
