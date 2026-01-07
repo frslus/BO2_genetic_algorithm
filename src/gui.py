@@ -1,4 +1,5 @@
 import tkinter as tk
+from json import dumps, dump
 from math import ceil
 from tkinter import messagebox
 
@@ -15,8 +16,8 @@ POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
 TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
 CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
-#graph buttons
-GRAPHBUTTON_LABELS = ["Wykresy","Graf"]
+# graph buttons
+GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
 CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.92}
 SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.92}
 
@@ -25,16 +26,17 @@ TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacj
                   "Limit pokoleń (ogólny)"]
 # TEXTBOX_VALUES = [100, 25, 5, 100, 9999]
 CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
-FIGURE_LAYERS = ["cost", "population", "time","city_graph"]
+FIGURE_LAYERS = ["cost", "population", "time", "city_graph"]
 
 # algorithm parameter selection positions
-NUMBER_PARAMS_POS = {"relx": 0.6, "rely": 0.3}
-CROSSING_SELECT_POS = {"relx": 0.85, "rely": 0.3}
-SELECTION_SELECT_POS = {"relx": 0.85, "rely": 0.5}
-MUTATION_SELECT_POS = {"relx": 0.85, "rely": 0.7}
+NUMBER_PARAMS_POS = {"relx": 0.57, "rely": 0.3}
+CROSSING_SELECT_POS = {"relx": 0.83, "rely": 0.2}
+SELECTION_SELECT_POS = {"relx": 0.83, "rely": 0.4}
+MUTATION_SELECT_POS = {"relx": 0.83, "rely": 0.6}
 
-GENERATE_SOLUTION_POS = {"relx": 0.6, "rely": 0.7}
+GENERATE_SOLUTION_POS = {"relx": 0.57, "rely": 0.7}
 CHECKBOX_POS = {"relx": 0.6, "rely": 0.77}
+
 
 class GUI:
     """
@@ -47,6 +49,9 @@ class GUI:
         self.font_size1 = FONT_SIZE
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
+
+        # config
+        self.config = {}
 
         # init window
         self.root = tk.Tk()
@@ -65,7 +70,7 @@ class GUI:
         # checkboxes
         self.checklabels = {name: tk.Label() for name in CHECKBOX_LABELS}
         self.checktype = {name: tk.IntVar(value=1) for name in CHECKBOX_LABELS}
-        self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(3)]
+        self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(5)]
         self.checklists = {name: tk.Frame(self.root) for name in CHECKBOX_LABELS}
 
         # generate solution button
@@ -149,29 +154,31 @@ class GUI:
             textbox.place_forget()
             textbox = tk.Text(self.textbox_grid, height=1, width=5, font=(self.font, self.font_size1))
             textbox.grid(row=i, column=1, sticky=tk.W + tk.E)
+            self.textboxes[i] = textbox
 
             textbox_label = self.textbox_labels[i]
             textbox_label.place_forget()
             textbox_label = tk.Label(self.textbox_grid, text=TEXTBOX_LABELS[i])
             textbox_label.grid(row=i, column=0, sticky=tk.W + tk.E)
+            self.textbox_labels[i] = textbox_label
 
         self.textbox_grid.place(**NUMBER_PARAMS_POS)
 
         # crossing checklist
         self.checklabels['crossing'].grid_forget()
-        self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typy krzyżowania",
+        self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typ krzyżowania",
                                                 font=(self.font, self.font_size2))
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # selection checklist
         self.checklabels['selection'].grid_forget()
-        self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typy selekcji",
+        self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typ selekcji",
                                                  font=(self.font, self.font_size2))
         self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         # mutation checklist
         self.checklabels['mutation'].grid_forget()
-        self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typ mutacji",
+        self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typy mutacji",
                                                 font=(self.font, self.font_size2))
         self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
@@ -185,9 +192,9 @@ class GUI:
         self.graphbuttons[0].place_forget()
         self.graphbuttons[1].place_forget()
         self.graphbuttons[0] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[0], font=(self.font, self.font_size2),
-                                    command=self.show_graphs)
+                                         command=self.show_graphs)
         self.graphbuttons[1] = tk.Button(self.root, text=GRAPHBUTTON_LABELS[1], font=(self.font, self.font_size2),
-                                    command=self.show_city_graph)
+                                         command=self.show_city_graph)
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
@@ -203,7 +210,7 @@ class GUI:
         :param fig: matplotlib figure containing graph
         :return: None
         """
-        fig = self.create_test_graph() if fig is None else fig
+        fig = self.create_test_figure() if fig is None else fig
 
         self.canvas['cost'].get_tk_widget().place_forget()
         self.canvas['cost'] = FigureCanvasTkAgg(fig, master=self.root)
@@ -215,7 +222,7 @@ class GUI:
         :param fig: matplotlib figure containing graph
         :return: None
         """
-        fig = self.create_test_graph() if fig is None else fig
+        fig = self.create_test_figure() if fig is None else fig
 
         self.canvas['population'].get_tk_widget().place_forget()
         self.canvas['population'] = FigureCanvasTkAgg(fig, master=self.root)
@@ -227,7 +234,7 @@ class GUI:
         :param fig: matplotlib figure containing graph
         :return: None
         """
-        fig = self.create_test_graph() if fig is None else fig
+        fig = self.create_test_figure() if fig is None else fig
 
         self.canvas['time'].get_tk_widget().place_forget()
         self.canvas['time'] = FigureCanvasTkAgg(fig, master=self.root)
@@ -238,7 +245,7 @@ class GUI:
         # toolbar = NavigationToolbar2Tk(self.canvas_time, self.root)
         # toolbar.update()
 
-    def create_test_graph(self, x=None, y=None) -> Figure:
+    def create_test_figure(self, x=None, y=None) -> Figure:
         """
         DEBUG USE ONLY. Create an example graph
         :param x: x axis data as an iter
@@ -271,7 +278,7 @@ class GUI:
         clear algorithm iteration graphs
         :return: None
         """
-        for _,graph in self.canvas.items():
+        for _, graph in self.canvas.items():
             graph.get_tk_widget().place_forget()
 
     def update_city_graph(self, fig: Figure = None) -> None:
@@ -280,7 +287,7 @@ class GUI:
         :param fig: matplotlib figure containing city graph
         :return: None
         """
-        fig = self.create_test_graph() if fig is None else fig
+        fig = self.create_test_figure() if fig is None else fig
 
         self.canvas["city_graph"].get_tk_widget().place_forget()
         self.canvas["city_graph"] = FigureCanvasTkAgg(fig, master=self.root)
@@ -355,7 +362,7 @@ class GUI:
         self.view_menu.add_separator()
 
         self.view_menu.add_command(label="Przywróć rozmiar tekstu", command=self.reset_font_size)
-        self.view_menu.add_command(label="TEST1", command=self.clear_everything)
+        self.view_menu.add_command(label="TEST1", command=self.update_config)
         self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
         self.menu_bar.add_cascade(menu=self.view_menu, label="Widok")
@@ -382,13 +389,13 @@ class GUI:
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         crossing_type = self.checktype['crossing']
-        check1 = tk.Radiobutton(self.checklists['crossing'], text="typ 1", variable=crossing_type, value=1,
+        check1 = tk.Radiobutton(self.checklists['crossing'], text="1 Cięcie", variable=crossing_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklists['crossing'], text="typ 2", variable=crossing_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['crossing'], text="losowe cięcia", variable=crossing_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklists['crossing'], text="typ 3", variable=crossing_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['crossing'], text="Losowa selekcja", variable=crossing_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
@@ -402,13 +409,13 @@ class GUI:
         self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         selection_type = self.checktype['selection']
-        check1 = tk.Radiobutton(self.checklists['selection'], text="typ 1", variable=selection_type, value=1,
+        check1 = tk.Radiobutton(self.checklists['selection'], text="Turniejowa", variable=selection_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklists['selection'], text="typ 2", variable=selection_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['selection'], text="Rankingowa", variable=selection_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklists['selection'], text="typ 3", variable=selection_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['selection'], text="Ruletka", variable=selection_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
@@ -417,20 +424,26 @@ class GUI:
     def create_mutation_selector(self):
         self.checklists['crossing'].columnconfigure(0, weight=1)
 
-        self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typ mutacji",
+        self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typy mutacji",
                                                 font=(self.font, self.font_size2))
         self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         mutation_type = self.checktype['mutation']
-        check1 = tk.Checkbutton(self.checklists['mutation'], text="typ 1", font=(self.font, self.font_size2),
+        check1 = tk.Checkbutton(self.checklists['mutation'], text="Miasta", font=(self.font, self.font_size2),
                                 variable=mutation_type[0])
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Checkbutton(self.checklists['mutation'], text="typ 2", font=(self.font, self.font_size2),
+        check2 = tk.Checkbutton(self.checklists['mutation'], text="Terminy", font=(self.font, self.font_size2),
                                 variable=mutation_type[1])
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Checkbutton(self.checklists['mutation'], text="typ 3", font=(self.font, self.font_size2),
+        check3 = tk.Checkbutton(self.checklists['mutation'], text="Ś. Transportu", font=(self.font, self.font_size2),
                                 variable=mutation_type[2])
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
+        check4 = tk.Checkbutton(self.checklists['mutation'], text="Dodatek genu", font=(self.font, self.font_size2),
+                                variable=mutation_type[3])
+        check4.grid(row=4, column=0, sticky=tk.W + tk.E)
+        check5 = tk.Checkbutton(self.checklists['mutation'], text="Usunięcie genu", font=(self.font, self.font_size2),
+                                variable=mutation_type[4])
+        check5.grid(row=5, column=0, sticky=tk.W + tk.E)
 
         self.checklists['mutation'].place(**MUTATION_SELECT_POS)
 
@@ -487,12 +500,57 @@ class GUI:
 
         self.update_text_elements()
 
+    def update_config(self) -> None:
+        """
+        update self.config with data pulled from gui
+        :return: None
+        """
+        config = self.config
+
+        # #textbox data
+        config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
+        config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip()) / 100
+        config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip()) / 100
+        config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
+        config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
+
+        # selection checkbox
+        selection_type = self.checktype['selection'].get()
+        config["selection_type"] = "tournament" if selection_type == 1 else (
+            "ranking" if selection_type == 2 else "roulette")
+
+        # crossing checkbox
+        crossing_type = self.checktype['crossing'].get()
+        config["crossing_types"] = "one_cut" if crossing_type == 1 else (
+            "random_cuts" if crossing_type == 2 else "random_selection")
+
+        # mutation checkbox
+        mutations = self.checktype['mutation']
+        mutations_list = []
+        if mutations[0].get():
+            mutations_list.append("city")
+        if mutations[1].get():
+            mutations_list.append("date")
+        if mutations[2].get():
+            mutations_list.append("transit_mode")
+        if mutations[3].get():
+            mutations_list.append("new_gene")
+        if mutations[4].get():
+            mutations_list.append("delete_gene")
+        config["mutation_types"] = mutations_list
+
+        print(self.config)
+        return
+
     def generate_solution(self):
         """
         Generate a random solution with loaded problem and initial population (.py).
         :return:
         """
         # TODO: implement me!
+
+        self.update_config()
+
         if self.has_iter_limit.get() == 0:
             print("INF")
         else:
@@ -558,15 +616,21 @@ class GUI:
             # TODO: implement me!
             pass
 
-    def save_config(self):
+    def save_config(self, filename: str = "config") -> None:
         """
         Save view settings config to .json
-        :return:
+        :param filename: Name of the file to save to
+        :return: None
         """
-        if messagebox.askyesno(title="Zapisz ustawienia",
-                               message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Zapisz ustawienia",
+                                   message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
+            return
+        config = dumps(self.config, indent=4)
+
+        path = f"../data/{filename}.json"
+        print(path)
+        with open(path, mode="w", newline="", encoding="utf-8") as file:
+            dump(config, file)
 
     def load_config(self):
         """
