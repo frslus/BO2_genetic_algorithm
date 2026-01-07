@@ -43,9 +43,10 @@ class MutationType(Enum):
 
 
 class SelectionType(Enum):
-    ROULETTE = "roulette"
-    RANKING = "ranking"
     TOURNAMENT = "tournament"
+    RANKING = "ranking"
+    ROULETTE = "roulette"
+
 
 
 type PackagesList = list[tuple[str, int, TransitMode]]

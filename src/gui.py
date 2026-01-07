@@ -385,13 +385,13 @@ class GUI:
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         crossing_type = self.checktype['crossing']
-        check1 = tk.Radiobutton(self.checklists['crossing'], text="Symetryczne", variable=crossing_type, value=1,
+        check1 = tk.Radiobutton(self.checklists['crossing'], text="1 Cięcie", variable=crossing_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklists['crossing'], text="Asymetryczne", variable=crossing_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['crossing'], text="losowe cięcia", variable=crossing_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklists['crossing'], text="Wielokrotne", variable=crossing_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['crossing'], text="Losowa selekcja", variable=crossing_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
@@ -496,17 +496,6 @@ class GUI:
 
         self.update_text_elements()
 
-    def generate_solution(self):
-        """
-        Generate a random solution with loaded problem and initial population (.py).
-        :return:
-        """
-        # TODO: implement me!
-        if self.has_iter_limit.get() == 0:
-            print("INF")
-        else:
-            print(9999)
-
     def update_config(self) -> None:
         """
         update self.config with data pulled from gui
@@ -524,15 +513,15 @@ class GUI:
 
         #selection checkbox
         selection_type = self.checktype['selection']
-        config["selection_type"] = "t" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
+        config["selection_type"] = "tournament" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
 
         #crossing checkbox
         crossing_type = self.checktype['crossing']
-        config["crossing_types"] = "symetric" if crossing_type == 1 else ("asymetric" if crossing_type == 2 else "polycrossing")
+        config["crossing_types"] = "one_cut" if crossing_type == 1 else ("random_cuts" if crossing_type == 2 else "random_selection")
         #["random_selection", "random_cuts"]
 
         #mutation checkbox
-        mutations = self.checktype['mutations']
+        mutations = self.checktype['mutation']
         mutations_list = []
         if mutations[0]:
             mutations_list.append("city")
@@ -548,6 +537,22 @@ class GUI:
 
         print(self.config)
         return
+
+    def generate_solution(self):
+        """
+        Generate a random solution with loaded problem and initial population (.py).
+        :return:
+        """
+        # TODO: implement me!
+
+        self.update_config()
+
+        if self.has_iter_limit.get() == 0:
+            print("INF")
+        else:
+            print(9999)
+
+
 
     # file handling
     def load_graph(self):
