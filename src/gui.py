@@ -1,4 +1,8 @@
 import tkinter as tk
+import file_handling
+import problem_description
+
+from json import dumps, dump, load
 from math import ceil
 from tkinter import messagebox
 
@@ -124,6 +128,7 @@ class GUI:
         """
         if messagebox.askyesno(title="Zamknij",
                                message="Czy na pewno chcesz wyjść z aplikacji?\nZmiany mogą być niezapisane!"):
+            # TODO: if algorithm is working, we have to close it here
             self.root.destroy()
 
     # general updates
@@ -153,11 +158,13 @@ class GUI:
             textbox.place_forget()
             textbox = tk.Text(self.textbox_grid, height=1, width=5, font=(self.font, self.font_size1))
             textbox.grid(row=i, column=1, sticky=tk.W + tk.E)
+            self.textboxes[i] = textbox
 
             textbox_label = self.textbox_labels[i]
             textbox_label.place_forget()
             textbox_label = tk.Label(self.textbox_grid, text=TEXTBOX_LABELS[i])
             textbox_label.grid(row=i, column=0, sticky=tk.W + tk.E)
+            self.textbox_labels[i] = textbox_label
 
         self.textbox_grid.place(**NUMBER_PARAMS_POS)
 
@@ -386,13 +393,13 @@ class GUI:
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
         crossing_type = self.checktype['crossing']
-        check1 = tk.Radiobutton(self.checklists['crossing'], text="Symetryczne", variable=crossing_type, value=1,
+        check1 = tk.Radiobutton(self.checklists['crossing'], text="1 Cięcie", variable=crossing_type, value=1,
                                 font=(self.font, self.font_size2))
         check1.grid(row=1, column=0, sticky=tk.W + tk.E)
-        check2 = tk.Radiobutton(self.checklists['crossing'], text="Asymetryczne", variable=crossing_type, value=2,
+        check2 = tk.Radiobutton(self.checklists['crossing'], text="losowe cięcia", variable=crossing_type, value=2,
                                 font=(self.font, self.font_size2))
         check2.grid(row=2, column=0, sticky=tk.W + tk.E)
-        check3 = tk.Radiobutton(self.checklists['crossing'], text="Wielokrotne", variable=crossing_type, value=3,
+        check3 = tk.Radiobutton(self.checklists['crossing'], text="Losowa selekcja", variable=crossing_type, value=3,
                                 font=(self.font, self.font_size2))
         check3.grid(row=3, column=0, sticky=tk.W + tk.E)
 
@@ -497,27 +504,77 @@ class GUI:
 
         self.update_text_elements()
 
+    def update_config(self) -> None:
+        """
+        update self.config with data pulled from gui
+        :return: None
+        """
+        config = self.config
+
+        # #textbox data
+        config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
+        config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip()) / 100
+        config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip()) / 100
+        config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
+        config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
+
+        # selection checkbox
+        selection_type = self.checktype['selection'].get()
+        config["selection_type"] = "tournament" if selection_type == 1 else (
+            "ranking" if selection_type == 2 else "roulette")
+
+        # crossing checkbox
+        crossing_type = self.checktype['crossing'].get()
+        config["crossing_types"] = "one_cut" if crossing_type == 1 else (
+            "random_cuts" if crossing_type == 2 else "random_selection")
+
+        # mutation checkbox
+        mutations = self.checktype['mutation']
+        mutations_list = []
+        if mutations[0].get():
+            mutations_list.append("city")
+        if mutations[1].get():
+            mutations_list.append("date")
+        if mutations[2].get():
+            mutations_list.append("transit_mode")
+        if mutations[3].get():
+            mutations_list.append("new_gene")
+        if mutations[4].get():
+            mutations_list.append("delete_gene")
+        config["mutation_types"] = mutations_list
+
+        print(self.config)
+        return
+
     def generate_solution(self):
         """
         Generate a random solution with loaded problem and initial population (.py).
         :return:
         """
         # TODO: implement me!
+
+        self.update_config()
+        # TODO: here we have to start a thread for genetic algorithm
         if self.has_iter_limit.get() == 0:
             print("INF")
         else:
             print(9999)
 
     # file handling
-    def load_graph(self):
+    def load_graph(self,filename:str = "graph.csv"):
         """
         Handle loading graph from  .csv
         :return:
         """
-        if messagebox.askyesno(title="Załaduj miasta",
+        if not messagebox.askyesno(title="Załaduj miasta",
                                message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
-            # TODO: implement me!
-            pass
+            return
+
+        try:
+            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
+        except KeyError:
+
+            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
 
     def load_population(self):
         """
@@ -568,67 +625,43 @@ class GUI:
             # TODO: implement me!
             pass
 
-    def update_config(self) -> None:
-        """
-        update self.config with data pulled from gui
-        :return: None
-        """
-        config = self.config
-
-        # #textbox data
-        # print(self.textboxes[0].get('1.0', tk.END))
-        # config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
-        # config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip())/100
-        # config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip())/100
-        # config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
-        # config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
-
-        #selection checkbox
-        selection_type = self.checktype['selection']
-        config["selection_type"] = "t" if selection_type == 1 else ("ranking" if selection_type == 2 else "roulette")
-
-        #crossing checkbox
-        crossing_type = self.checktype['crossing']
-        config["crossing_types"] = "symetric" if crossing_type == 1 else ("asymetric" if crossing_type == 2 else "polycrossing")
-        #["random_selection", "random_cuts"]
-
-        #mutation checkbox
-        mutations = self.checktype['mutations']
-        mutations_list = []
-        if mutations[0]:
-            mutations_list.append("city")
-        if mutations[1]:
-            mutations_list.append("date")
-        if mutations[2]:
-            mutations_list.append("transit_mode")
-        if mutations[3]:
-            mutations_list.append("new_gene")
-        if mutations[4]:
-            mutations_list.append("delete_gene")
-        config["mutation_types"] = mutations_list
-
-        print(self.config)
-        return
-
-    def save_config(self):
+    def save_config(self, filename: str = "config") -> None:
         """
         Save view settings config to .json
-        :return:
+        :param filename: Name of the config file to save to. Must be .json
+        :return: None
         """
-        if messagebox.askyesno(title="Zapisz ustawienia",
-                               message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Zapisz ustawienia",
+                                   message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
+            return
+        config = dumps(self.config)
 
-    def load_config(self):
+        # save to data/filename.json
+        path = f"../data/{filename}.json"
+        with open(path, mode="w") as file:
+            dump(config, file)
+
+    def load_config(self, filename: str = "config") -> None:
         """
         Load view settings config from .json
-        :return:
+        :param filename: Name of the config file to load from. Must be .json
+        :return: None
         """
-        if messagebox.askyesno(title="Załaduj",
+        if not messagebox.askyesno(title="Załaduj",
                                message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
-            # TODO: implement me!
-            pass
+            return
+
+        path = f"../data/{filename}.json"
+        with open(path,mode="r", newline="", encoding="utf-8") as file:
+            self.config = load(file)
+
+    # def update_from_config(self) -> None:
+    #     """
+    #     Update checkboxes in gui from current self.config
+    #     :return:
+    #     """
+    #     for key in CHECKBOX_LABELS:
+    #         self.checktype[key].set(self.config[key])
 
 
 if __name__ == '__main__':

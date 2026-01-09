@@ -4,16 +4,15 @@ import networkx as nx
 
 
 class TransportProblemObject:
-    def __init__(self, cities_graph: nx.MultiGraph | str, packages_list: list[dict] | str):
-        if isinstance(cities_graph, str):
-            cities_graph_file = cities_graph
-            cities_graph = load_graph_from_file(cities_graph_file)
-        if isinstance(packages_list, str):
-            packages_list_file = packages_list
-            packages_list = load_list_from_file(packages_list_file)
-        self.__cities_graph = deepcopy(cities_graph)
-        self.__packages_list = deepcopy(packages_list)
-        self.__timespan = max([elem["date_delivery"] for elem in self.__packages_list])
+    def __init__(self, cities_graph: nx.MultiGraph | str | None = None,
+                 packages_list: list[dict] | str | None = None):
+        self.__cities_graph = None
+        self.__packages_list = None
+        self.__timespan = None
+        if cities_graph is not None:
+            self.reload_graph(cities_graph)
+        if packages_list is not None:
+            self.reload_list(packages_list)
 
     def __getattr__(self, item):
         if item == "graph":
@@ -26,6 +25,19 @@ class TransportProblemObject:
 
     def __len__(self):
         return len(self.__packages_list)
+
+    def reload_graph(self, cities_graph: nx.MultiGraph | str):
+        if isinstance(cities_graph, str):
+            cities_graph_file = cities_graph
+            cities_graph = load_graph_from_file(cities_graph_file)
+        self.__cities_graph = deepcopy(cities_graph)
+
+    def reload_list(self, packages_list: list[dict] | str):
+        if isinstance(packages_list, str):
+            packages_list_file = packages_list
+            packages_list = load_list_from_file(packages_list_file)
+        self.__packages_list = deepcopy(packages_list)
+        self.__timespan = max([elem["date_delivery"] for elem in self.__packages_list])
 
     def save_to_file(self, filename: str) -> None:
         save_graph_to_file(self.__cities_graph, filename + "/cities_graph.csv")
@@ -101,7 +113,7 @@ class TransportProblemObject:
                     return INF
         return cost
 
-    def generate_solution(self, max_len: int = 3):
+    def generate_solution(self, max_len: int = 3, addition_chance: float = 0.3):
         if max_len < 1:
             raise ValueError(f"Max chromosome length must be 1 or more, not: {max_len}")
         genotype = []
@@ -110,7 +122,7 @@ class TransportProblemObject:
         for i in range(len(self)):
             chromosome = []
             for j in range(max_len - 1):
-                if uniform(0, 1) < 0.3:
+                if uniform(0, 1) < addition_chance:
                     local_cities = deepcopy(cities)
                     local_cities.remove(self.__packages_list[i]["city_to"])
                     if chromosome:
@@ -143,6 +155,6 @@ class TransportProblemObject:
                 date = self.__packages_list[i]["date_ready"]
             mode = modes_of_transit[randint(0, len(modes_of_transit) - 1)]
             chromosome.append((self.__packages_list[i]["city_to"], date, mode))
-            processed_chromosome = Chromosome([Gene(c,d,m) for c, d, m in chromosome])
+            processed_chromosome = Chromosome([Gene(c, d, m) for c, d, m in chromosome])
             genotype.append(processed_chromosome)
         return Organism(Genotype(genotype), self)

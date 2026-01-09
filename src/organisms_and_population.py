@@ -1,7 +1,9 @@
 from enum import Enum
 from copy import deepcopy
 from random import randint, uniform
-from math import ceil
+from math import ceil, floor
+import csv
+
 INF = float("inf")
 import networkx as nx
 
@@ -12,6 +14,9 @@ class TransitMode(Enum):
     PLANE = "plane"
     CAR = "car"
     TRAIN = "train"
+
+    def __repr__(self):
+        return self.value
 
     def __str__(self):
         return self.value
@@ -43,9 +48,10 @@ class MutationType(Enum):
 
 
 class SelectionType(Enum):
-    ROULETTE = "roulette"
-    RANKING = "ranking"
     TOURNAMENT = "tournament"
+    RANKING = "ranking"
+    ROULETTE = "roulette"
+
 
 
 type PackagesList = list[tuple[str, int, TransitMode]]
@@ -210,6 +216,8 @@ class Organism:
         return str(self.__genotype)
 
     def cost(self):
+        if self.__cost is None:
+            self.evaluate()
         return self.__cost
 
     def evaluate(self):
@@ -217,6 +225,9 @@ class Organism:
 
     def is_evaluated(self):
         return not self.__cost is None
+
+    def link_problem(self, problem):
+        self.__problem = problem
 
     def crossover(self, other, crossing_type: CrossingType | str):
         if isinstance(crossing_type, str):
@@ -345,13 +356,61 @@ class Organism:
                 raise ValueError(f"{mutation_type} is not correct type of mutation")
 
 
+def save_population_to_file(filename: str, population):
+    organisms_list = [deepcopy(elem) for elem in population]
+    organisms_number = len(organisms_list)
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        w0 = csv.DictWriter(file, fieldnames=["population_size"], delimiter=";")
+        w0.writeheader()
+        w0.writerow({"population_size": organisms_number})
+        w1 = csv.DictWriter(file, fieldnames=[f"organism_size"], delimiter=";")
+        w1.writeheader()
+        w1.writerow({"organism_size": len(organisms_list[0])})
+        for i in range(organisms_number):
+            w2 = csv.DictWriter(file, fieldnames=[f"organism_{i}"], delimiter=";")
+            w2.writeheader()
+            for j, chromosome in enumerate(organisms_list[i]):
+                w3 = csv.DictWriter(file, fieldnames=[f"chromosome_{j}"], delimiter=";")
+                w3.writeheader()
+                w3.writerow({f"chromosome_{j}": len(chromosome)})
+                w4 = csv.DictWriter(file, fieldnames=["city_to", "date", "mode_of_transit"], delimiter=";")
+                w4.writeheader()
+                for gene in chromosome:
+                    w4.writerow({"city_to": gene.city_to, "date": gene.date,"mode_of_transit": str(gene.mode_of_transit)})
+
+def load_population_from_file(filename: str):
+    organisms_list = []
+    labels = [("city_to", str), ("date", int), ("mode_of_transit", str)]
+    with open(filename, mode="r", encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter=";")
+        next(reader)
+        organisms_number = int(next(reader)[0])
+        next(reader)
+        organism_size = int(next(reader)[0])
+        for _ in range(organisms_number):
+            next(reader)
+            chromosomes = []
+            for _ in range(organism_size):
+                next(reader)
+                chromosome_length = int(next(reader)[0])
+                next(reader)
+                genes = []
+                for _ in range(chromosome_length):
+                    city_to, date, mode_of_transit = next(reader)
+                    genes.append(Gene(city_to, int(date), mode_of_transit))
+                chromosomes.append(Chromosome(genes))
+            organisms_list.append(Organism(Genotype(chromosomes), None))
+    return organisms_list
+
 class Population:
     """
     Represents a generation of solutions.
     """
 
-    def __init__(self, organisms_list: list[Organism]):
+    def __init__(self, organisms_list: list[Organism] | str):
         self.__organisms = []
+        if isinstance(organisms_list, str):
+            organisms_list = load_population_from_file(organisms_list)
         for organism in organisms_list:
             if not isinstance(organism, Organism):
                 raise TypeError(f"Organism must be type of {Organism}, not {type(organism)}")
@@ -383,6 +442,15 @@ class Population:
         population_copy.sort(key=lambda x: x[1].cost())
         return deepcopy(population_copy[0][1])
 
+    def worst(self):
+        population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
+        population_copy.sort(key=lambda x: x[1].cost() if x[1].cost() != INF else 0, reverse=True)
+        return deepcopy(population_copy[0][1])
+
+    def link_problem(self, problem):
+        for organism in self.__organisms:
+            organism.link_problem(problem)
+
     def selection(self, selection_type: SelectionType | str, parent_percent: float) -> list[tuple[int, int]]:
         if isinstance(selection_type, str):
             selection_type = SelectionType(selection_type)
@@ -396,20 +464,93 @@ class Population:
         for organism in self.__organisms:
             if not organism.is_evaluated():
                 organism.evaluate()
+        population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
+        pairs = []
         match selection_type:
             case SelectionType.ROULETTE:
-                raise NotImplementedError()
+                min_cost = self.best().cost()
+                max_cost = self.worst().cost()
+                delta_cost = max_cost - min_cost
+                pool = 0
+                tickets = [0 for _ in range(len(self))]
+                if population_copy[0][1].cost() == INF:
+                    pool += 1
+                    tickets[0] = 1
+                else:
+                    if delta_cost == 0:
+                        tickets_number = 100
+                    else:
+                        tickets_number = 100 - ceil(90 * ((population_copy[0][1].cost() - min_cost) / delta_cost))
+                    pool += tickets_number
+                    tickets[0] = tickets_number
+                for idx, elem in population_copy[1:]:
+                    if elem.cost() == INF:
+                        pool += 1
+                        tickets[idx] = 1
+                    else:
+                        if delta_cost == 0:
+                            tickets_number = 100
+                        else:
+                            tickets_number = 100 - ceil(90 * ((elem.cost() - min_cost) / delta_cost))
+                        pool += tickets_number
+                        tickets[idx] = tickets_number
+                for _ in range(parents_number // 2):
+                    ticket1 = randint(0, pool - 1)
+                    organism1 = 0
+                    while ticket1 > tickets[organism1]:
+                        ticket1 -= tickets[organism1]
+                        organism1 += 1
+                    pool -= tickets[organism1]
+                    tickets[organism1] = 0
+                    ticket2 = randint(0, pool - 1)
+                    organism2 = 0
+                    while ticket2 > tickets[organism2]:
+                        ticket2 -= tickets[organism2]
+                        organism2 += 1
+                    pool -= tickets[organism2]
+                    tickets[organism2] = 0
+                    pairs.append((organism1, organism2))
+                # print(pairs)
             case SelectionType.RANKING:
-                population_copy = [elem for elem in enumerate(deepcopy(self.__organisms))]
                 population_copy.sort(key=lambda x: x[1].cost())
                 population_copy = population_copy[:parents_number]
-                pairs = []
                 for _ in range(parents_number // 2):
                     organism1 = population_copy.pop(randint(0, len(population_copy) - 1))[0]
                     organism2 = population_copy.pop(randint(0, len(population_copy) - 1))[0]
                     pairs.append((organism1, organism2))
             case SelectionType.TOURNAMENT:
-                raise NotImplementedError()
+                group_max_len = floor(len(self) / parents_number)
+                groups_unready = [[None for _ in range(group_max_len)] for _ in range(parents_number)]
+                groups_ready = []
+                for i in range(len(self) - group_max_len * parents_number):
+                    groups_unready[i].append(None)
+                for _ in range(len(self)):
+                    elem = population_copy.pop(randint(0, len(population_copy) - 1))
+                    i = randint(0, len(groups_unready) - 1)
+                    groups_unready[i].insert(0, elem)
+                    groups_unready[i].pop()
+                    if groups_unready[i][-1] is not None:
+                        full_group = groups_unready.pop(i)
+                        groups_ready.append(full_group)
+                for i in range(parents_number // 2):
+                    organism1 = groups_ready[2 * i][0]
+                    # print(organism1[0], organism1[1].cost())
+                    for j in range(1, len(groups_ready[2 * i])):
+                        # print(groups_ready[2 * i][j][0], groups_ready[2 * i][j][1].cost())
+                        if organism1[1].cost() > groups_ready[2 * i][j][1].cost():
+                            organism1 = groups_ready[2 * i][j]
+                    # print(organism1[0])
+                    # print()
+                    organism2 = groups_ready[2 * i + 1][0]
+                    # print(organism2[0], organism2[1].cost())
+                    for j in range(1, len(groups_ready[2 * i + 1])):
+                        # print(groups_ready[2 * i + 1][j][0], groups_ready[2 * i + 1][j][1].cost())
+                        if organism2[1].cost() > groups_ready[2 * i + 1][j][1].cost():
+                            organism2 = groups_ready[2 * i + 1][j]
+                    pairs.append((organism1[0], organism2[0]))
+                    # print(organism2[0])
+                    # print()
+                # print(pairs)
             case _:
                 raise TypeError(f"'{selection_type}' is not correct selection type")
         return pairs
@@ -425,9 +566,10 @@ class Population:
                     mutation_type = mutation_types[randint(0, len(mutation_types) - 1)]
                     child.mutate(mutation_type)
                 new_generation.append(child)
-        all_organisms = deepcopy(self.__organisms) + new_generation
-        for organism in all_organisms:
+        missing_elements = len(self.__organisms) - len(new_generation)
+        old_generation = deepcopy(self.__organisms)
+        for organism in old_generation:
             if not organism.is_evaluated():
                 organism.evaluate()
-        all_organisms.sort(key=lambda x: x.cost())
-        self.__organisms = deepcopy(all_organisms[:len(self.__organisms)])
+        old_generation.sort(key=lambda x: x.cost())
+        self.__organisms = deepcopy(new_generation + old_generation[:missing_elements])

@@ -1,4 +1,5 @@
 from src.genetic_algorithm import *
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -12,8 +13,8 @@ def main():
     # print()
     # for elem, d in j1.items(): print(elem, d[0], d[1])
     # print()
-    save_graph_to_file(graph, "data/test1.csv")
-    new_graph = load_graph_from_file("data/test1.csv")
+    # save_graph_to_file(graph, "data/test1.csv")
+    # new_graph = load_graph_from_file("data/test1.csv")
     # j1 = johnson(new_graph, "train", "cost")
     # print()
     # for elem, d in j1.items(): print(elem, d[0], d[1])
@@ -54,8 +55,8 @@ def main():
     # print(org1)
     package_list = [{"city_from": "xD1", "city_to": "xD2", "date_ready": 1, "date_delivery": 2, "weight": 10},
                     {"city_from": "xD3", "city_to": "xD4", "date_ready": 3, "date_delivery": 4, "weight": 20}]
-    save_list_to_file(package_list, "data/test2.csv")
-    new_list = load_list_from_file("data/test2.csv")
+    # save_list_to_file(package_list, "data/test2.csv")
+    # new_list = load_list_from_file("data/test2.csv")
     # print(package_list)
     # print(new_list)
 
@@ -227,6 +228,14 @@ def main():
     print()
 
     pop1 = Population(children[:4])
+    save_population_to_file("data/simple6_population.csv", pop1)
+    pop2 = Population("data/simple6_population.csv")
+    pop2.link_problem(tprob)
+    print(pop1[3])
+    print(pop1[3].cost())
+    print(pop2[3])
+    print(pop2[3].cost())
+    print()
     selection = pop1.selection("ranking", 0.5)
     for elem in pop1: print(elem.cost(), end=" ")
     print()
@@ -251,8 +260,15 @@ def main():
     print((1000 - inf_cnt), "/", 1000)
     print()
 
-    best_one = genetic_algorithm(tprob)
+    extra_data = {}
+    best_one = genetic_algorithm(tprob, "data/test_config.json", extra_data)
     print(best_one)
+
+    vx = [i for i in range(len(extra_data["best_overall"]))]
+    plt.plot(vx, extra_data["best_overall"], "r-")
+    plt.plot(vx, extra_data["mean_in_iter"], "b-")
+    plt.legend(["best_overall", "mean_in_iter"])
+    plt.show()
 
 
 if __name__ == '__main__':
