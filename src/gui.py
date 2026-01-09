@@ -125,6 +125,7 @@ class GUI:
         """
         if messagebox.askyesno(title="Zamknij",
                                message="Czy na pewno chcesz wyjść z aplikacji?\nZmiany mogą być niezapisane!"):
+            # TODO: if algorithm is working, we have to close it here
             self.root.destroy()
 
     # general updates
@@ -550,7 +551,7 @@ class GUI:
         # TODO: implement me!
 
         self.update_config()
-
+        # TODO: here we have to start a thread for genetic algorithm
         if self.has_iter_limit.get() == 0:
             print("INF")
         else:
