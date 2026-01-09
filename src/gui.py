@@ -53,8 +53,12 @@ class GUI:
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
 
-        # config
+        # config and data
         self.config = {}
+        # TODO: add self.TPO = TransportProblemObject()
+        # TODO: add self.population = Population()
+        # TODO: add self.best = Organism()
+        # TODO: add self.extra_data: dict = {} with all post algorithm information
 
         # init window
         self.root = tk.Tk()
@@ -113,7 +117,11 @@ class GUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    def starting_screen(self):
+    def starting_screen(self) -> None:
+        """
+        Boot up starting screen
+        :return: None
+        """
         self.update_window_params()
         self.main_label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
                                    font=(self.font, self.font_size1))
@@ -208,6 +216,7 @@ class GUI:
                                        variable=self.has_iter_limit)
         self.checkbox.place(**CHECKBOX_POS)
 
+    #TODO: add function creating figure
     def update_cost_graph(self, fig: Figure = None) -> None:
         """
         Plot given figure object as cost graph
@@ -264,6 +273,15 @@ class GUI:
         plot1.plot(x, y)
 
         return fig
+
+    def draw_graphs(self) -> tuple[Figure,Figure,Figure]:
+        """
+        Draw figures from self.extra data
+        :return: Cost figure, Population figure, Time figure
+        """
+        # self.extra data required
+        # TODO: Implement me!
+        pass
 
     def update_graphs(self, fig_cost: Figure = None, fig_population: Figure = None, fig_time: Figure = None) -> None:
         """
