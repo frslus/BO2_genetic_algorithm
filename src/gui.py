@@ -7,27 +7,34 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 
 import file_handling
+import generate_graphs
+import organisms_and_population
+import problem_description
 
 # text constants
 FONT_SIZE = 18
 FONT = "Helvetica"
 
-#starting screen
+# starting screen
 STARTSCREEN_BG_POS = {"relx": 0.1, "rely": 0.02, "relheight": 0.5, "relwidth": 0.8}
 STARTSCREEN_LABEL_POS = {"relx": 0.2, "rely": 0.05, "relheight": 0.4, "relwidth": 0.6}
-STARTSCREEN_BUTTON_POS = {"relx": 0.25, "rely": 0.6,"relwidth": 0.5, "relheight": 0.3}
+STARTSCREEN_BUTTON_POS = {"relx": 0.25, "rely": 0.6, "relwidth": 0.5, "relheight": 0.3}
 
-#backgrounds
+# backgrounds
 BG_COLORS = ["lightgrey", "lightgreen", "lightgrey"]
 GRAPH_BG_POS = {"relx": 0, "rely": 0.055, "relheight": 0.87, "relwidth": 0.76}
 SELECTOR_BG_POS = {"relx": 0.76, "rely": 0, "relheight": 1, "relwidth": 0.3}
 VIEW_BUTTONS_BG_POS = {"relx": 0.02, "rely": 0, "relheight": 0, "relwidth": 0}
 
-# graph positions
+# graphs positions
 COST_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.6, "relwidth": 0.74}
 POPULATION_GRAPH_POS = {"relx": 0.02, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
 TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
-CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
+
+# citygraph positions
+CITY_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.75, "relwidth": 0.74}
+LEFTARROW_POS = {"relx": 0.1, "rely": 0.1}  # TODO: implement me
+RIGHTARROW_POS = {"relx": 0.2, "rely": 0.2}  # TODO: implement me
 
 # graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
@@ -47,9 +54,10 @@ CROSSING_SELECT_POS = {"relx": 0.8, "rely": 0.27, "relheight": 0.19, "relwidth":
 SELECTION_SELECT_POS = {"relx": 0.8, "rely": 0.47, "relheight": 0.19, "relwidth": 0.16}
 MUTATION_SELECT_POS = {"relx": 0.8, "rely": 0.67, "relheight": 0.27, "relwidth": 0.16}
 
-#generate solution button
+# generate solution button
 MAIN_LABEL_POS = {"relx": 0.15, "rely": 0.01, "relheight": 0.04, "relwidth": 0.5}
 GENERATE_SOLUTION_POS = {"relx": 0.53, "rely": 0.935}
+
 
 class GUI:
     """
@@ -65,8 +73,8 @@ class GUI:
 
         # config and data
         self.config = {}
-        # TODO: add self.TPO = TransportProblemObject()
-        # TODO: add self.population = Population()
+        self.TPO = problem_description.TransportProblemObject()
+        self.population = organisms_and_population.Population([])
         # TODO: add self.best = Organism()
         # TODO: add self.extra_data: dict = {} with all post algorithm information
 
@@ -78,7 +86,7 @@ class GUI:
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.view_menu = tk.Menu(self.menu_bar, tearoff=0)
 
-        #background
+        # background
         self.rectangles = [tk.Canvas(self.root, bg=color) for color in BG_COLORS]
 
         # text fields
@@ -107,7 +115,7 @@ class GUI:
         self.starting_screen()
         self.root.mainloop()
 
-    #background management
+    # background management
     def place_backgrounds(self) -> None:
         """
         Place backgrounds on the homescreen according to constants
@@ -115,7 +123,6 @@ class GUI:
         """
         self.rectangles[0].place(**SELECTOR_BG_POS)
         self.rectangles[1].place(**GRAPH_BG_POS)
-
 
     # screen management
     def place_everything(self):
@@ -232,7 +239,6 @@ class GUI:
                                          command=self.show_city_graph)
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
-
 
     # TODO: add function creating figure
     def update_cost_graph(self, fig: Figure = None) -> None:
@@ -380,6 +386,7 @@ class GUI:
         # randomize
         self.file_menu.add_command(label="Wylosuj miasta", command=self.generate_graph)
         self.file_menu.add_command(label="Wylosuj populację", command=self.generate_population)
+        self.file_menu.add_command(label="Wylosuj przesyłki", command=self.generate_packages)
         self.file_menu.add_separator()
 
         # save loaded
@@ -587,14 +594,11 @@ class GUI:
         Generate a random solution with loaded problem and initial population (.py).
         :return:
         """
-        # TODO: implement me!
-
         self.update_config()
+
+        # TODO: implement me!
         # TODO: here we have to start a thread for genetic algorithm
-        if self.has_iter_limit.get() == 0:
-            print("INF")
-        else:
-            print(9999)
+        print(9999)
 
     # file handling
     def load_graph(self, filename: str = "graph.csv"):
@@ -606,90 +610,134 @@ class GUI:
                                    message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz graf miast",
+                                         filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
-            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
-        except KeyError:
-
-            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
+            self.TPO.__cities_graph = file_handling.load_graph_from_file(path.name)
+        except(AttributeError):
+            return
 
     def load_population(self):
         """
         Handle loading initiaL population from  .csv
         :return:
         """
-        if messagebox.askyesno(title="Załaduj populację",
-                               message="Czy na pewno chcesz załadować populację z pliku?\nAktualnie wczytana zostanie nadpisana!"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Załaduj populację",
+                                   message="Czy na pewno chcesz załadować populację z pliku?\nAktualnie wczytana zostanie nadpisana!"):
+            return
+
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz populację",
+                                         filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+        try:
+            self.population = organisms_and_population.load_population_from_file(path.name)
+        except(AttributeError):
+            return
 
     def generate_graph(self):
         """
         Handle generating random graph from generate_graph.create_complete_graph
         :return:
         """
-        if messagebox.askyesno(title="Wylosuj miasta",
-                               message="Czy na pewno chcesz wylosować graf?\nAktualnie wczytany zostanie nadpisany!"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Wylosuj miasta",
+                                   message="Czy na pewno chcesz wylosować graf?\nAktualnie wczytany zostanie nadpisany!"):
+            return
+
+        self.TPO.__cities_graph = generate_graphs.create_complete_graph()
 
     def generate_population(self):
         """
         Handle generating random population
         :return:
         """
-        if messagebox.askyesno(title="Wylosuj populację",
-                               message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Wylosuj populację",
+                                   message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
+            return
+
+        raise(NotImplementedError)
+        # TODO: implement me!
+
+    def generate_packages(self):
+        """
+        Handle generating random packages
+        """
+
+        if not messagebox.askyesno(title="Wylosuj przesyłki",
+                                   message="Czy na pewno chcesz wylosować listę przesylek?\nAktualnie wczytana zostanie nadpisana!"):
+            return
+
+        raise (NotImplementedError)
+        # TODO: implement me!
 
     def save_graph(self):
         """
         Save currently loaded graph to .csv
         :return:
         """
-        if messagebox.askyesno(title="Zapisz graf", message="Czy na pewno chcesz zapisać graf do pliku"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Zapisz graf", message="Czy na pewno chcesz zapisać graf do pliku"):
+            return
+
+        path = tk.filedialog.asksaveasfile(initialfile='graph.csv', defaultextension=".csv",
+                                           filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
+        try:
+            file_handling.save_graph_to_file(self.TPO.__cities_graph, path.name)
+        except(AttributeError):
+            return
+
+        return
 
     def save_population(self):
         """
         save currently loaded population to .csv
         :return:
         """
-        if messagebox.askyesno(title="Zapisz populację",
-                               message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Zapisz populację",
+                                   message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
+            return
 
-    def save_config(self, filename: str = "config") -> None:
+        path = tk.filedialog.asksaveasfile(initialfile='population.csv', defaultextension=".csv",
+                                           filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
+        try:
+            organisms_and_population.save_population_to_file(self.population, path.name)
+        except(AttributeError):
+            return
+
+    def save_config(self) -> None:
         """
         Save view settings config to .json
-        :param filename: Name of the config file to save to. Must be .json
         :return: None
         """
         if not messagebox.askyesno(title="Zapisz ustawienia",
                                    message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
             return
+        path = tk.filedialog.asksaveasfile(initialfile='config.json', defaultextension=".json",
+                                           filetypes=[("All Files", "*.*"), ("Json Files", "*.json")])
+
         config = dumps(self.config)
+        try:
+            with open(path.name, mode="w") as file:
+                dump(config, file)
+        except(AttributeError):
+            return
 
-        # save to data/filename.json
-        path = f"../data/{filename}.json"
-        with open(path, mode="w") as file:
-            dump(config, file)
-
-    def load_config(self, filename: str = "config") -> None:
+    def load_config(self) -> None:
         """
         Load view settings config from .json
-        :param filename: Name of the config file to load from. Must be .json
         :return: None
         """
         if not messagebox.askyesno(title="Załaduj",
                                    message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
             return
 
-        path = f"../data/{filename}.json"
-        with open(path, mode="r", newline="", encoding="utf-8") as file:
-            self.config = load(file)
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz konfigurację",
+                                         filetypes=[("json files", "*.json"), ("All files", "*.*")])
+
+        try:
+            with open(path.name, mode="r", newline="", encoding="utf-8") as file:
+                self.config = load(file)
+        except(AttributeError):
+            return
+
+        return
 
     # def update_from_config(self) -> None:
     #     """

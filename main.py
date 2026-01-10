@@ -228,7 +228,7 @@ def main():
     print()
 
     pop1 = Population(children[:4])
-    save_population_to_file("data/simple6_population.csv", pop1)
+    save_population_to_file(pop1,"data/simple6_population.csv")
     pop2 = Population("data/simple6_population.csv")
     pop2.link_problem(tprob)
     print(pop1[3])
