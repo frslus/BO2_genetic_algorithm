@@ -35,7 +35,8 @@ class GUI:
 
         # algo output
         self.extra_data = {}
-        #TODO: add self.best = organisms_and_population.Organism()
+        self.best = None
+        #TODO: add  = organisms_and_population.Organism()
 
         # init window
         self.root = tk.Tk()
@@ -633,8 +634,9 @@ class GUI:
                                    message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        raise (NotImplementedError)
         # TODO: implement me!
+        # TODO: assess if function is redundant
+        raise (NotImplementedError)
 
     def generate_packages(self):
         """
@@ -645,8 +647,9 @@ class GUI:
                                    message="Czy na pewno chcesz wylosować listę przesylek?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        raise (NotImplementedError)
-        # TODO: implement me!
+        # TODO: assess and test implementation
+        self.TPO.__packages_list = generate_graphs.generate_package_list(self.TPO.__cities_graph)
+
 
     def save_graph(self):
         """

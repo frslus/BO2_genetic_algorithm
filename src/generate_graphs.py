@@ -423,3 +423,9 @@ def create_complete_graph(cities: list[city_params] = None, airports: dict[city_
     if not extended_output:
         return graph
     return graph, adj_list, cities, airports
+
+def generate_package_list(graph:nx.MultiGraph, length:int = 10, max_weight:float = 7) -> list[tuple[city_id,float,float]]:
+    """
+    Generate a random package list
+    """
+    pass
