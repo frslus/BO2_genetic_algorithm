@@ -53,7 +53,6 @@ class SelectionType(Enum):
     ROULETTE = "roulette"
 
 
-
 type PackagesList = list[tuple[str, int, TransitMode]]
 
 
@@ -220,8 +219,14 @@ class Organism:
             self.evaluate()
         return self.__cost
 
+    def is_alive(self):
+        return self.cost() != INF
+
     def evaluate(self):
         self.__cost = self.__problem.evaluate_function(self)
+
+    def time_margin(self):
+        return self.__problem.evaluate_function(self, True)[1]
 
     def is_evaluated(self):
         return not self.__cost is None
@@ -376,7 +381,9 @@ def save_population_to_file(filename: str, population):
                 w4 = csv.DictWriter(file, fieldnames=["city_to", "date", "mode_of_transit"], delimiter=";")
                 w4.writeheader()
                 for gene in chromosome:
-                    w4.writerow({"city_to": gene.city_to, "date": gene.date,"mode_of_transit": str(gene.mode_of_transit)})
+                    w4.writerow(
+                        {"city_to": gene.city_to, "date": gene.date, "mode_of_transit": str(gene.mode_of_transit)})
+
 
 def load_population_from_file(filename: str):
     organisms_list = []
@@ -401,6 +408,7 @@ def load_population_from_file(filename: str):
                 chromosomes.append(Chromosome(genes))
             organisms_list.append(Organism(Genotype(chromosomes), None))
     return organisms_list
+
 
 class Population:
     """
@@ -556,8 +564,10 @@ class Population:
         return pairs
 
     def reproduction(self, pairs: reproduction_pairs, crossing_types: list[CrossingType | str],
-                     mutation_types: list[MutationType | str], mutation_chance: float) -> None:
+                     mutation_types: list[MutationType | str], mutation_chance: float,
+                     return_alive_percent: bool = False) -> float | None:
         new_generation = []
+        alive_cnt = 0
         for idx1, idx2 in pairs:
             for _ in range(2):
                 crossing_type = crossing_types[randint(0, len(crossing_types) - 1)]
@@ -566,6 +576,8 @@ class Population:
                     mutation_type = mutation_types[randint(0, len(mutation_types) - 1)]
                     child.mutate(mutation_type)
                 new_generation.append(child)
+                if child.is_alive():
+                    alive_cnt += 1
         missing_elements = len(self.__organisms) - len(new_generation)
         old_generation = deepcopy(self.__organisms)
         for organism in old_generation:
@@ -573,3 +585,5 @@ class Population:
                 organism.evaluate()
         old_generation.sort(key=lambda x: x.cost())
         self.__organisms = deepcopy(new_generation + old_generation[:missing_elements])
+        if return_alive_percent:
+            return alive_cnt / len(self)

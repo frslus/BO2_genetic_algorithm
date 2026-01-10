@@ -10,6 +10,22 @@ DEFAULT_GENERATED_CHROMOSOME_MAX_LENGTH = 4
 DEFAULT_ADDITION_CHANCE = 0.3
 
 
+def generate_population(problem: TransportProblemObject, population_size: int, alive_number: int,
+                        generated_chromosome_max_length, addition_chance) -> Population:
+    alive_organisms = []
+    dead_organisms = []
+    while len(alive_organisms) + len(dead_organisms) < population_size:
+        new_organism = problem.generate_solution(generated_chromosome_max_length, addition_chance)
+        new_organism.evaluate()
+        if new_organism.cost() == INF:
+            if len(dead_organisms) < population_size - alive_number:
+                dead_organisms.append(new_organism)
+        else:
+            alive_organisms.append(new_organism)
+    population = Population(alive_organisms + dead_organisms)
+    return population
+
+
 def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
                       extra_data: dict | None = None, initial_population: Population | None = None) -> Organism:
     if isinstance(config_file, str):
@@ -32,39 +48,34 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
     addition_chance = DEFAULT_ADDITION_CHANCE
 
     # variables
-    alive_number = ceil(population_size * alive_percent)
-    alive_organisms = []
-    dead_organisms = []
     if extra_data is not None:
         extra_data["best_overall"] = []
         extra_data["mean_in_iter"] = []
+        extra_data["time_margin"] = []
+        extra_data["alive_percent"] = []
 
     # initial population generation
     if initial_population is not None:
-        population = initial_population
+        population = deepcopy(initial_population)
     else:
-        while len(alive_organisms) + len(dead_organisms) < population_size:
-            new_organism = problem.generate_solution(generated_chromosome_max_length, addition_chance)
-            new_organism.evaluate()
-            if new_organism.cost() == INF:
-                if len(dead_organisms) < population_size - alive_number:
-                    dead_organisms.append(new_organism)
-            else:
-                alive_organisms.append(new_organism)
-        population = Population(alive_organisms + dead_organisms)
+        alive_number = ceil(population_size * alive_percent)
+        population = generate_population(problem, population_size, alive_number,
+                                         generated_chromosome_max_length, addition_chance)
 
     # main algorithm
     best_score = population.best().cost()
     best_score_iter = 0
     for i in range(total_iterations):
         selection = population.selection(selection_type, parent_percent)
-        population.reproduction(selection, crossing_types, mutation_types, mutation_chance)
+        alive_percent = population.reproduction(selection, crossing_types, mutation_types, mutation_chance, True)
         if population.best().cost() < best_score:
             best_score = population.best().cost()
             best_score_iter = i
         if extra_data is not None:
             extra_data["best_overall"].append(best_score)
             extra_data["mean_in_iter"].append(population.mean_cost())
+            extra_data["time_margin"].append(population.best().time_margin())
+            extra_data["alive_percent"].append(alive_percent)
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
