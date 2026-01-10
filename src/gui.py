@@ -23,11 +23,15 @@ GRAPH_BG_POS = {"relx": 0, "rely": 0.055, "relheight": 0.87, "relwidth": 0.76}
 SELECTOR_BG_POS = {"relx": 0.76, "rely": 0, "relheight": 1, "relwidth": 0.3}
 VIEW_BUTTONS_BG_POS = {"relx": 0.02, "rely": 0, "relheight": 0, "relwidth": 0}
 
-# graph positions
+# graphs positions
 COST_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.6, "relwidth": 0.74}
 POPULATION_GRAPH_POS = {"relx": 0.02, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
 TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
-CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
+
+# citygraph positions
+CITY_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.75, "relwidth": 0.74}
+LEFTARROW_POS = {"relx": 0.1, "rely": 0.1} # TODO: implement me
+RIGHTARROW_POS = {"relx": 0.2, "rely": 0.2} # TODO: implement me
 
 # graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
@@ -587,14 +591,11 @@ class GUI:
         Generate a random solution with loaded problem and initial population (.py).
         :return:
         """
-        # TODO: implement me!
-
         self.update_config()
+
+        # TODO: implement me!
         # TODO: here we have to start a thread for genetic algorithm
-        if self.has_iter_limit.get() == 0:
-            print("INF")
-        else:
-            print(9999)
+        print(9999)
 
     # file handling
     def load_graph(self, filename: str = "graph.csv"):
@@ -606,11 +607,11 @@ class GUI:
                                    message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
-        try:
-            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
-        except KeyError:
-
-            self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
+        # try:
+        #     self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
+        # except KeyError:
+        #
+        #     self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
 
     def load_population(self):
         """
@@ -670,12 +671,20 @@ class GUI:
         if not messagebox.askyesno(title="Zapisz ustawienia",
                                    message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
             return
-        config = dumps(self.config)
+        path = tk.filedialog.asksaveasfile(initialfile='config.json',defaultextension=".json", filetypes=[("All Files", "*.*"), ("Json Files", "*.json")])
 
-        # save to data/filename.json
-        path = f"../data/{filename}.json"
-        with open(path, mode="w") as file:
+        config = dumps(self.config)
+        with open(path.name, mode="w") as file:
             dump(config, file)
+
+        return
+
+        # config = dumps(self.config)
+        #
+        # # save to data/filename.json
+        # path = f"../data/{filename}.json"
+        # with open(path, mode="w") as file:
+        #     dump(config, file)
 
     def load_config(self, filename: str = "config") -> None:
         """
@@ -683,13 +692,21 @@ class GUI:
         :param filename: Name of the config file to load from. Must be .json
         :return: None
         """
-        if not messagebox.askyesno(title="Załaduj",
-                                   message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
-            return
+        path = tk.filedialog.askopenfile(mode='r',title="Wybierz konfigurację", filetypes=[("json files", "*.json"), ("All files", "*.*")])
 
-        path = f"../data/{filename}.json"
-        with open(path, mode="r", newline="", encoding="utf-8") as file:
+        with open(path.name, mode="r", newline="", encoding="utf-8") as file:
             self.config = load(file)
+
+        return
+
+        # if not messagebox.askyesno(title="Załaduj",
+        #                            message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
+        #     return
+        #
+        # path = f"../data/{filename}.json"
+        # with open(path, mode="r", newline="", encoding="utf-8") as file:
+        #     self.config = load(file)
+
 
     # def update_from_config(self) -> None:
     #     """
