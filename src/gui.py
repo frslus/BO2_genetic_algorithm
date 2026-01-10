@@ -1,7 +1,4 @@
 import tkinter as tk
-import file_handling
-import problem_description
-
 from json import dumps, dump, load
 from math import ceil
 from tkinter import messagebox
@@ -9,20 +6,33 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 
+import file_handling
+
 # text constants
 FONT_SIZE = 18
 FONT = "Helvetica"
 
+#starting screen
+STARTSCREEN_BG_POS = {"relx": 0.1, "rely": 0.02, "relheight": 0.5, "relwidth": 0.8}
+STARTSCREEN_LABEL_POS = {"relx": 0.2, "rely": 0.05, "relheight": 0.4, "relwidth": 0.6}
+STARTSCREEN_BUTTON_POS = {"relx": 0.25, "rely": 0.6,"relwidth": 0.5, "relheight": 0.3}
+
+#backgrounds
+BG_COLORS = ["lightgrey", "lightgreen", "lightgrey"]
+GRAPH_BG_POS = {"relx": 0, "rely": 0.055, "relheight": 0.87, "relwidth": 0.76}
+SELECTOR_BG_POS = {"relx": 0.76, "rely": 0, "relheight": 1, "relwidth": 0.3}
+VIEW_BUTTONS_BG_POS = {"relx": 0.02, "rely": 0, "relheight": 0, "relwidth": 0}
+
 # graph positions
-COST_GRAPH_POS = {"relx": 0.05, "rely": 0.05}
-POPULATION_GRAPH_POS = {"relx": 0.05, "rely": 0.5}
-TIME_GRAPH_POS = {"relx": 0.25, "rely": 0.5}
+COST_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.6, "relwidth": 0.74}
+POPULATION_GRAPH_POS = {"relx": 0.02, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
+TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
 CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
 # graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
-CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.92}
-SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.92}
+CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.935}
+SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.935}
 
 # algorithm parameter labels
 TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
@@ -32,14 +42,14 @@ CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
 FIGURE_LAYERS = ["cost", "population", "time", "city_graph"]
 
 # algorithm parameter selection positions
-NUMBER_PARAMS_POS = {"relx": 0.57, "rely": 0.3}
-CROSSING_SELECT_POS = {"relx": 0.83, "rely": 0.2}
-SELECTION_SELECT_POS = {"relx": 0.83, "rely": 0.4}
-MUTATION_SELECT_POS = {"relx": 0.83, "rely": 0.6}
+NUMBER_PARAMS_POS = {"relx": 0.77, "rely": 0.05, "relheight": 0.21, "relwidth": 0.22}
+CROSSING_SELECT_POS = {"relx": 0.8, "rely": 0.27, "relheight": 0.19, "relwidth": 0.16}
+SELECTION_SELECT_POS = {"relx": 0.8, "rely": 0.47, "relheight": 0.19, "relwidth": 0.16}
+MUTATION_SELECT_POS = {"relx": 0.8, "rely": 0.67, "relheight": 0.27, "relwidth": 0.16}
 
-GENERATE_SOLUTION_POS = {"relx": 0.57, "rely": 0.7}
-CHECKBOX_POS = {"relx": 0.6, "rely": 0.77}
-
+#generate solution button
+MAIN_LABEL_POS = {"relx": 0.15, "rely": 0.01, "relheight": 0.04, "relwidth": 0.5}
+GENERATE_SOLUTION_POS = {"relx": 0.53, "rely": 0.935}
 
 class GUI:
     """
@@ -53,8 +63,12 @@ class GUI:
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
 
-        # config
+        # config and data
         self.config = {}
+        # TODO: add self.TPO = TransportProblemObject()
+        # TODO: add self.population = Population()
+        # TODO: add self.best = Organism()
+        # TODO: add self.extra_data: dict = {} with all post algorithm information
 
         # init window
         self.root = tk.Tk()
@@ -63,6 +77,9 @@ class GUI:
         self.menu_bar = tk.Menu(self.root)
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.view_menu = tk.Menu(self.menu_bar, tearoff=0)
+
+        #background
+        self.rectangles = [tk.Canvas(self.root, bg=color) for color in BG_COLORS]
 
         # text fields
         textbox_count = len(TEXTBOX_LABELS)
@@ -79,8 +96,6 @@ class GUI:
         # generate solution button
         self.main_label = tk.Label()
         self.button = tk.Button()
-        self.has_iter_limit = tk.IntVar(value=1)
-        self.checkbox = tk.Checkbutton()
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
@@ -92,6 +107,16 @@ class GUI:
         self.starting_screen()
         self.root.mainloop()
 
+    #background management
+    def place_backgrounds(self) -> None:
+        """
+        Place backgrounds on the homescreen according to constants
+        :return: None
+        """
+        self.rectangles[0].place(**SELECTOR_BG_POS)
+        self.rectangles[1].place(**GRAPH_BG_POS)
+
+
     # screen management
     def place_everything(self):
         """
@@ -100,6 +125,7 @@ class GUI:
         """
         self.update_window_params()
         self.create_full_menu()
+        self.place_backgrounds()
         self.root.config(menu=self.menu_bar)
         self.update_text_elements()
         self.place_all_selectors()
@@ -113,13 +139,18 @@ class GUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    def starting_screen(self):
+    def starting_screen(self) -> None:
+        """
+        Boot up starting screen
+        :return: None
+        """
         self.update_window_params()
+        self.rectangles[0].place(**STARTSCREEN_BG_POS)
         self.main_label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
                                    font=(self.font, self.font_size1))
-        self.main_label.pack()
+        self.main_label.place(**STARTSCREEN_LABEL_POS)
         self.button = tk.Button(self.root, text="START", command=self.place_everything)
-        self.button.place(relx=0.45, rely=0.15)
+        self.button.place(**STARTSCREEN_BUTTON_POS)
 
     def close_window(self):
         """
@@ -148,9 +179,9 @@ class GUI:
         :return:
         """
         # label
-        self.main_label.pack_forget()
+        self.main_label.place_forget()
         self.main_label = tk.Label(self.root, text="Algorytm Genetyczny", font=(self.font, self.font_size1))
-        self.main_label.pack()
+        self.main_label.place(**MAIN_LABEL_POS)
 
         # textbox
         for i in range(5):
@@ -202,12 +233,8 @@ class GUI:
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
-        # checkbox
-        self.checkbox.place_forget()
-        self.checkbox = tk.Checkbutton(self.root, text="Limit iteracji", font=(self.font, self.font_size2),
-                                       variable=self.has_iter_limit)
-        self.checkbox.place(**CHECKBOX_POS)
 
+    # TODO: add function creating figure
     def update_cost_graph(self, fig: Figure = None) -> None:
         """
         Plot given figure object as cost graph
@@ -259,11 +286,20 @@ class GUI:
         x = [i for i in range(20)] if x is None else x
         y = [(i ** 2 - 15 * i) for i in x] if y is None else y
 
-        fig = Figure(figsize=(3, 3), dpi=100)
+        fig = Figure(figsize=(10, 10), dpi=100)
         plot1 = fig.add_subplot(111)
         plot1.plot(x, y)
 
         return fig
+
+    def draw_graphs(self) -> tuple[Figure, Figure, Figure]:
+        """
+        Draw figures from self.extra data
+        :return: Cost figure, Population figure, Time figure
+        """
+        # self.extra data required
+        # TODO: Implement me!
+        pass
 
     def update_graphs(self, fig_cost: Figure = None, fig_population: Figure = None, fig_time: Figure = None) -> None:
         """
@@ -561,13 +597,13 @@ class GUI:
             print(9999)
 
     # file handling
-    def load_graph(self,filename:str = "graph.csv"):
+    def load_graph(self, filename: str = "graph.csv"):
         """
         Handle loading graph from  .csv
         :return:
         """
         if not messagebox.askyesno(title="Załaduj miasta",
-                               message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
+                                   message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
         try:
@@ -648,11 +684,11 @@ class GUI:
         :return: None
         """
         if not messagebox.askyesno(title="Załaduj",
-                               message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
+                                   message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
             return
 
         path = f"../data/{filename}.json"
-        with open(path,mode="r", newline="", encoding="utf-8") as file:
+        with open(path, mode="r", newline="", encoding="utf-8") as file:
             self.config = load(file)
 
     # def update_from_config(self) -> None:
