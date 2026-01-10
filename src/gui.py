@@ -33,8 +33,8 @@ TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35
 
 # citygraph positions
 CITY_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.75, "relwidth": 0.74}
-LEFTARROW_POS = {"relx": 0.1, "rely": 0.1}  # TODO: implement me
-RIGHTARROW_POS = {"relx": 0.2, "rely": 0.2}  # TODO: implement me
+LEFTARROW_POS = {"relx": 0.05, "rely": 0.84}  # TODO: implement me
+RIGHTARROW_POS = {"relx": 0.1, "rely": 0.84}  # TODO: implement me
 
 # graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
@@ -105,14 +105,16 @@ class GUI:
         # generate solution
         self.main_label = tk.Label()
         self.button = tk.Button()
-        self.is_running = False
         self.stopbutton = tk.Button()
+        self.is_running = False
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
         self.graphbuttons = [tk.Button() for _ in GRAPHBUTTON_LABELS]
-        self.arrows = tk.Button(self.root, text="circle", cursor="circle")
+        self.leftarrow = tk.Button(self.root, text="<--", font=(self.font, self.font_size2),command=self.show_prev_package)
+        self.rightarrow = tk.Button(self.root, text="-->", font=(self.font, self.font_size2),command=self.show_next_package)
+        self.cur_package_id = 0
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
@@ -360,6 +362,8 @@ class GUI:
         Choose city graph as the one shown in the GUI
         :return:
         """
+        self.leftarrow.place(**LEFTARROW_POS)
+        self.rightarrow.place(**RIGHTARROW_POS)
         self.clear_graphs()
         self.update_city_graph()
 
@@ -368,8 +372,26 @@ class GUI:
         Choose solution graphs as the one shown in the GUI
         :return:
         """
+        self.leftarrow.place_forget()
+        self.rightarrow.place_forget()
         self.clear_city_graph()
         self.update_graphs()
+
+    def show_prev_package(self) -> None:
+        """
+        Show the previous package in an iteration from self.extra_data
+        :return: None
+        """
+        self.cur_package_id -= 1
+        self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
+
+    def show_next_package(self)-> None:
+        """
+        Show the next package in an iteration from self.extra_data
+        :return: None
+        """
+        self.cur_package_id += 1
+        self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
 
     # menu handling
     def create_full_menu(self):
