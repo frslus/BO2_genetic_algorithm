@@ -26,11 +26,14 @@ def generate_population(problem: TransportProblemObject, population_size: int, a
     return population
 
 
-def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
-                      extra_data: dict | None = None, initial_population: Population | None = None) -> Organism:
+def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, lock = None,
+                      extra_data: dict | None = None, initial_population: Population | None = None,
+                      run_flag=False) -> Organism:
     if isinstance(config_file, str):
         with open(config_file, mode="r", encoding="utf-8") as file:
             params = json.load(file)
+    else:
+        params = config_file
 
     # parameters from configuration file
     population_size = params["population_size"]
@@ -49,13 +52,15 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
 
     # variables
     if extra_data is not None:
-        extra_data["best_overall"] = []
-        extra_data["mean_in_iter"] = []
-        extra_data["time_margin"] = []
-        extra_data["alive_percent"] = []
+        with lock:
+            extra_data["iterations"] = 0
+            extra_data["best_overall"] = []
+            extra_data["mean_in_iter"] = []
+            extra_data["time_margin"] = []
+            extra_data["alive_percent"] = []
 
     # initial population generation
-    if initial_population is not None:
+    if initial_population is not None and len(initial_population) > 0:
         population = deepcopy(initial_population)
     else:
         alive_number = ceil(population_size * alive_percent)
@@ -65,17 +70,22 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
     # main algorithm
     best_score = population.best().cost()
     best_score_iter = 0
+    print("xD")
     for i in range(total_iterations):
+        if not run_flag:
+            break
         selection = population.selection(selection_type, parent_percent)
         alive_percent = population.reproduction(selection, crossing_types, mutation_types, mutation_chance, True)
         if population.best().cost() < best_score:
             best_score = population.best().cost()
             best_score_iter = i
         if extra_data is not None:
-            extra_data["best_overall"].append(best_score)
-            extra_data["mean_in_iter"].append(population.mean_cost())
-            extra_data["time_margin"].append(population.best().time_margin())
-            extra_data["alive_percent"].append(alive_percent)
+            with lock:
+                extra_data["iterations"] += 1
+                extra_data["best_overall"].append(best_score)
+                extra_data["mean_in_iter"].append(population.mean_cost())
+                extra_data["time_margin"].append(population.best().time_margin())
+                extra_data["alive_percent"].append(alive_percent)
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
@@ -84,3 +94,8 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict,
     else:
         print(f"Algorithm stopped - iteration limit reached")
     return population.best()
+
+
+def wrapped_genetic_algorithm(gui):
+    gui.best = genetic_algorithm(gui.TPO, gui.config, gui.extra_data_lock,
+                                 gui.extra_data, gui.population, gui.is_running)

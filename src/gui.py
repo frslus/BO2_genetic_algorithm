@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from json import dumps, dump, load
 from math import ceil
@@ -11,6 +12,9 @@ import generate_graphs
 import organisms_and_population
 import problem_description
 from gui_config import *
+import matplotlib.pyplot as plt
+import threading
+from genetic_algorithm import *
 
 
 class GUI:
@@ -35,8 +39,9 @@ class GUI:
 
         # algo output
         self.extra_data = {}
+        self.extra_data_lock = threading.Lock()
         self.best = None
-        #TODO: add  = organisms_and_population.Organism()
+        # TODO: add  = organisms_and_population.Organism()
 
         # init window
         self.root = tk.Tk()
@@ -66,6 +71,7 @@ class GUI:
         self.button = tk.Button()
         self.stopbutton = tk.Button()
         self.is_running = False
+        self.genetic_thread = None
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
@@ -276,8 +282,31 @@ class GUI:
         :return: Cost figure, Population figure, Time figure
         """
         # self.extra data required
-        # TODO: Implement me!
-        pass
+        # variables
+        vx = [elem for elem in range(self.extra_data["iterations"])]
+
+        # cost graph
+        fig_cost, ax_cost = plt.subplots()
+        vy1 = self.extra_data["best_overall"][:]
+        print(vy1)
+        vy2 = self.extra_data["mean_in_iter"][:]
+        print(vy2)
+        ax_cost.plot(vx, vy1)
+        ax_cost.plot(vx, vy2)
+
+        # time margins graph
+        fig_time, ax_time = plt.subplots()
+        vy1 = self.extra_data["time_margin"][:]
+        print(vy1)
+        ax_time.plot(vx, vy1)
+
+        # alive percent of new generation graph
+        fig_population, ax_population = plt.subplots()
+        vy1 = [100*elem for elem in self.extra_data["alive_percent"]]
+        print(vy1)
+        ax_population.plot(vx, vy1)
+
+        return fig_cost, fig_time, fig_population
 
     def update_graphs(self, fig_cost: Figure = None, fig_population: Figure = None, fig_time: Figure = None) -> None:
         """
@@ -594,7 +623,7 @@ class GUI:
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz graf miast",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
-            self.TPO.__cities_graph = file_handling.load_graph_from_file(path.name)
+            self.TPO.reload_graph(path.name)
         except(AttributeError):
             return
 
@@ -623,7 +652,7 @@ class GUI:
                                    message="Czy na pewno chcesz wylosować graf?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
-        self.TPO.__cities_graph = generate_graphs.create_complete_graph()
+        self.TPO.reload_graph(generate_graphs.create_complete_graph())
 
     def generate_population(self):
         """
@@ -648,8 +677,7 @@ class GUI:
             return
 
         # TODO: assess and test implementation
-        self.TPO.__packages_list = generate_graphs.generate_package_list(self.TPO.__cities_graph)
-
+        self.TPO.reload_list(generate_graphs.generate_package_list(self.TPO.graph))
 
     def save_graph(self):
         """
@@ -662,7 +690,7 @@ class GUI:
         path = tk.filedialog.asksaveasfile(initialfile='graph.csv', defaultextension=".csv",
                                            filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
         try:
-            file_handling.save_graph_to_file(self.TPO.__cities_graph, path.name)
+            file_handling.save_graph_to_file(self.TPO.graph, path.name)
         except(AttributeError):
             return
 
@@ -752,12 +780,33 @@ class GUI:
 
         # pre running prep
         self.is_running = True
-        self.update_config()
+        if not self.config:
+            self.update_config()
+        last_processed_iter = 0
 
         # start algorithm
         # TODO: implement me!
         # TODO: here we have to start a thread for genetic algorithm
-        print(9999)
+        self.genetic_thread = threading.Thread(target=wrapped_genetic_algorithm,args=[self])
+        self.genetic_thread.start()
+        print("algorithm started")
+        while self.genetic_thread.is_alive():
+            if not self.is_running:
+                self.genetic_thread.join()
+                break
+            with self.extra_data_lock:
+                if "iterations" in self.extra_data and last_processed_iter < self.extra_data["iterations"]:
+                    fig_cost, fig_time, fig_population = self.draw_graphs()
+                    self.update_graphs(fig_cost, fig_time, fig_population)
+                    plt.close(fig_cost)
+                    plt.close(fig_time)
+                    plt.close(fig_population)
+                    last_processed_iter = self.extra_data["iterations"]
+            time.sleep(0.5)
+            print("iterations: ", last_processed_iter)
+        else:
+            self.is_running = False
+        print(self.best.cost())
 
     def stop_algorithm(self) -> None:
         """
