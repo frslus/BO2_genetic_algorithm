@@ -356,7 +356,7 @@ class Organism:
                 raise ValueError(f"{mutation_type} is not correct type of mutation")
 
 
-def save_population_to_file(filename: str, population):
+def save_population_to_file(population, filename: str):
     organisms_list = [deepcopy(elem) for elem in population]
     organisms_number = len(organisms_list)
     with open(filename, mode="w", newline="", encoding="utf-8") as file:
@@ -408,6 +408,7 @@ class Population:
     """
 
     def __init__(self, organisms_list: list[Organism] | str):
+        # TODO: allow for argumentless init
         self.__organisms = []
         if isinstance(organisms_list, str):
             organisms_list = load_population_from_file(organisms_list)

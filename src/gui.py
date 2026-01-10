@@ -8,6 +8,7 @@ from matplotlib.figure import Figure
 
 import file_handling
 import problem_description
+import organisms_and_population
 
 # text constants
 FONT_SIZE = 18
@@ -71,8 +72,7 @@ class GUI:
         # config and data
         self.config = {}
         self.TPO = problem_description.TransportProblemObject()
-        # TODO: add self.TPO = TransportProblemObject()
-        # TODO: add self.population = Population()
+        self.population = organisms_and_population.Population([])
         # TODO: add self.best = Organism()
         # TODO: add self.extra_data: dict = {} with all post algorithm information
 
@@ -628,7 +628,7 @@ class GUI:
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz populację",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
-            self.TPO.__packages_list = file_handling.load_list_from_file(path.name)
+            self.population = organisms_and_population.load_population_from_file(path.name)
         except(AttributeError):
             return
 
@@ -681,7 +681,7 @@ class GUI:
         path = tk.filedialog.asksaveasfile(initialfile='population.csv', defaultextension=".csv",
                                            filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
         try:
-            file_handling.save_list_to_file(self.TPO.__packages_list, path.name)
+            organisms_and_population.save_population_to_file(self.population, path.name)
         except(AttributeError):
             return
 
