@@ -57,6 +57,7 @@ MUTATION_SELECT_POS = {"relx": 0.8, "rely": 0.67, "relheight": 0.27, "relwidth":
 # generate solution button
 MAIN_LABEL_POS = {"relx": 0.15, "rely": 0.01, "relheight": 0.04, "relwidth": 0.5}
 GENERATE_SOLUTION_POS = {"relx": 0.53, "rely": 0.935}
+STOP_SOLUTION_POS = {"relx": 0.45, "rely": 0.935}
 
 
 class GUI:
@@ -101,14 +102,17 @@ class GUI:
         self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(5)]
         self.checklists = {name: tk.Frame(self.root) for name in CHECKBOX_LABELS}
 
-        # generate solution button
+        # generate solution
         self.main_label = tk.Label()
         self.button = tk.Button()
+        self.is_running = False
+        self.stopbutton = tk.Button()
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
         self.graphbuttons = [tk.Button() for _ in GRAPHBUTTON_LABELS]
+        self.arrows = tk.Button(self.root, text="circle", cursor="circle")
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
@@ -156,7 +160,7 @@ class GUI:
         self.main_label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
                                    font=(self.font, self.font_size1))
         self.main_label.place(**STARTSCREEN_LABEL_POS)
-        self.button = tk.Button(self.root, text="START", command=self.place_everything)
+        self.button = tk.Button(self.root, text="START", command=self.place_everything, cursor="sizing")
         self.button.place(**STARTSCREEN_BUTTON_POS)
 
     def close_window(self):
@@ -227,8 +231,13 @@ class GUI:
         # solution button
         self.button.place_forget()
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
-                                command=self.generate_solution)
+                                command=self.generate_solution, cursor="sizing", bg = "lightgreen")
         self.button.place(**GENERATE_SOLUTION_POS)
+
+        # self.stopbutton.place_forget()
+        # self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
+        #                         command=self.stop_algorithm, cursor="pirate", bg="darkgrey")
+        # self.stopbutton.place(**STOP_SOLUTION_POS)
 
         # graph button
         self.graphbuttons[0].place_forget()
@@ -300,7 +309,7 @@ class GUI:
 
     def draw_graphs(self) -> tuple[Figure, Figure, Figure]:
         """
-        Draw figures from self.extra data
+        Draw figures from self.extra_data
         :return: Cost figure, Population figure, Time figure
         """
         # self.extra data required
@@ -589,17 +598,6 @@ class GUI:
         print(self.config)
         return
 
-    def generate_solution(self):
-        """
-        Generate a random solution with loaded problem and initial population (.py).
-        :return:
-        """
-        self.update_config()
-
-        # TODO: implement me!
-        # TODO: here we have to start a thread for genetic algorithm
-        print(9999)
-
     # file handling
     def load_graph(self, filename: str = "graph.csv"):
         """
@@ -653,7 +651,7 @@ class GUI:
                                    message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        raise(NotImplementedError)
+        raise (NotImplementedError)
         # TODO: implement me!
 
     def generate_packages(self):
@@ -746,6 +744,45 @@ class GUI:
     #     """
     #     for key in CHECKBOX_LABELS:
     #         self.checktype[key].set(self.config[key])
+
+    def generate_solution(self):
+        """
+        Generate a random solution with loaded problem and initial population (.py).
+        :return:
+        """
+        if self.is_running or not messagebox.askyesno(title="Wygeneruj rozwiązanie", message="Czy na pewno wygenerować rozwiązanie?"):
+            return
+
+        # GUI running indicators
+        self.button.place_forget()
+        self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
+                                command=self.generate_solution, cursor="watch", bg="darkgrey")
+        self.button.place(**GENERATE_SOLUTION_POS)
+
+        self.stopbutton.place_forget()
+        self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
+                                command=self.stop_algorithm, cursor="pirate", bg="red")
+        self.stopbutton.place(**STOP_SOLUTION_POS)
+
+        # pre running prep
+        self.is_running = True
+        self.update_config()
+
+        # start algorithm
+        # TODO: implement me!
+        # TODO: here we have to start a thread for genetic algorithm
+        print(9999)
+
+    def stop_algorithm(self) -> None:
+        """
+        Stop the algorithm from running. Does nothing if the algorithm does not run
+        :return: None
+        """
+        if not self.is_running or not messagebox.askyesno(title="STOP", message="Czy na pewno zatrzymać rozwiązanie?"):
+            return
+
+        # TODO: assess if implementation is complete
+        self.is_running = False
 
 
 if __name__ == '__main__':
