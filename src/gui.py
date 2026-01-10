@@ -615,11 +615,6 @@ class GUI:
             self.TPO.__cities_graph = file_handling.load_graph_from_file(path.name)
         except(AttributeError):
             return
-        # try:
-        #     self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
-        # except KeyError:
-        #
-        #     self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
 
     def load_population(self):
         """
@@ -630,7 +625,12 @@ class GUI:
                                message="Czy na pewno chcesz załadować populację z pliku?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        # TODO: implement me!
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz populację",
+                                         filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+        try:
+            self.TPO.__packages_list = file_handling.load_list_from_file(path.name)
+        except(AttributeError):
+            return
 
     def generate_graph(self):
         """
@@ -674,10 +674,17 @@ class GUI:
         save currently loaded population to .csv
         :return:
         """
-        if messagebox.askyesno(title="Zapisz populację",
+        if not messagebox.askyesno(title="Zapisz populację",
                                message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
-            # TODO: implement me!
-            pass
+            return
+
+        path = tk.filedialog.asksaveasfile(initialfile='population.csv', defaultextension=".csv",
+                                           filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
+        try:
+            file_handling.save_list_to_file(self.TPO.__packages_list, path.name)
+        except(AttributeError):
+            return
+
 
     def save_config(self) -> None:
         """
@@ -695,7 +702,6 @@ class GUI:
                 dump(config, file)
         except(AttributeError):
             return
-        return
 
         # config = dumps(self.config)
         #
