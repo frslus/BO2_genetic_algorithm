@@ -43,20 +43,23 @@ class TransportProblemObject:
         save_graph_to_file(self.__cities_graph, filename + "/cities_graph.csv")
         save_list_to_file(self.__packages_list, filename + "/packages_list.csv")
 
-    def evaluate_function(self, organism: Organism) -> float:
+    def evaluate_function(self, organism: Organism, return_date_margin: bool = False) -> float:
         # DEBUGGING
         RAPORT = False
         # /DEBUGGING
+        time_margin = 0
         cost = 0.0
         storage_matrix = [{key: 0 for key in self.__cities_graph.nodes} for _ in range(self.__timespan)]
         for i in range(len(organism)):
             location = self.__packages_list[i]["city_from"]
             is_transported = False
             transport_end = None
+            arrived_date = None
             j = 0
             for t in range(self.__packages_list[i]["date_ready"], self.__packages_list[i]["date_delivery"]):
                 if is_transported:
                     if transport_end <= t:
+                        arrived_date = t
                         is_transported = False
                         location = organism[i][j].city_to
                         j += 1
@@ -66,11 +69,11 @@ class TransportProblemObject:
                         if RAPORT:
                             print(i, j, t, organism[i][j])
                         # /DEBUGGING
-                        return INF
+                        return (INF,0) if return_date_margin else INF
                     if organism[i][j].date == t:
                         is_transported = True
                         if location == organism[i][j].city_to:
-                            return INF
+                            return (INF,0) if return_date_margin else INF
                         transport_end = organism[i][j].date + self.__cities_graph[location][organism[i][j].city_to][
                             organism[i][j].mode_of_transit]["time"]
                         cost += self.__cities_graph[location][organism[i][j].city_to][
@@ -89,6 +92,7 @@ class TransportProblemObject:
                 if is_transported:
                     if transport_end <= self.__packages_list[i]["date_delivery"]:
                         is_transported = False
+                        arrived_date = t
                         location = organism[i][j].city_to
                         j += 1
             if is_transported or j < len(organism[i]) or location != self.__packages_list[i]["city_to"]:
@@ -96,7 +100,8 @@ class TransportProblemObject:
                 if RAPORT:
                     print(is_transported, j, location, "!=", self.__packages_list[i]["city_to"])
                 # /DEBUGGING
-                return INF
+                return (INF,0) if return_date_margin else INF
+            time_margin += self.__packages_list[i]["date_delivery"] - arrived_date
         # DEBUGGING
         if RAPORT:
             for i, elem in enumerate(storage_matrix):
@@ -110,8 +115,8 @@ class TransportProblemObject:
                     if RAPORT:
                         print(t, location, storage_matrix[t][location], capacities[location])
                     # /DEBUGGING
-                    return INF
-        return cost
+                    return (INF,0) if return_date_margin else INF
+        return (cost, time_margin) if return_date_margin else cost
 
     def generate_solution(self, max_len: int = 3, addition_chance: float = 0.3):
         if max_len < 1:
