@@ -260,6 +260,10 @@ def main():
     print((1000 - inf_cnt), "/", 1000)
     print()
 
+    l1 = generate_package_list(tprob.graph, 12, (5,10), 18, 3)
+    for elem in l1: print(elem)
+    print()
+
     extra_data = {}
     best_one = genetic_algorithm(tprob, "data/test_config.json", extra_data)
     print(best_one)

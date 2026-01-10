@@ -307,7 +307,7 @@ def assign_train_costs(graph: nx.MultiGraph, railways: edge_data = None, *, trai
     return railways
 
 
-def johnson(graph: nx.MultiGraph, layer1: str, layer2: str, path_layer: str = "path") -> dict[edge,path]:
+def johnson(graph: nx.MultiGraph, layer1: str, layer2: str, path_layer: str = "path") -> dict[edge, path]:
     """
     Optimise connections on a given layer using johnson algorithm.
     :param graph: The multigraph representation of cities. The layer needs to be complete.
@@ -424,8 +424,22 @@ def create_complete_graph(cities: list[city_params] = None, airports: dict[city_
         return graph
     return graph, adj_list, cities, airports
 
-def generate_package_list(graph:nx.MultiGraph, length:int = 10, max_weight:float = 7) -> list[tuple[city_id,float,float]]:
+
+def generate_package_list(graph: nx.MultiGraph, length: int = 10, weight: tuple[int, int] = (3, 7),
+                          timespan: int = 16, min_time: int = 3) -> list[dict]:
     """
     Generate a random package list
     """
-    pass
+    cities = list(graph.nodes())
+    cities_number = len(cities)
+    if (timespan - min_time) < 1 or cities_number < 2:
+        return []
+    package_list = [{} for _ in range(length)]
+    for package in package_list:
+        from_idx = randint(0, cities_number - 1)
+        package["city_from"] = cities[from_idx]
+        package["city_to"] = cities[(from_idx + randint(1, cities_number - 1)) % cities_number]
+        package["date_ready"] = randint(0, timespan - min_time)
+        package["date_delivery"] = randint(package["date_ready"] + min_time, timespan)
+        package["weight"] = randint(weight[0], weight[1])
+    return package_list
