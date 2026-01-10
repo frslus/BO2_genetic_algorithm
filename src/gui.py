@@ -10,53 +10,7 @@ import file_handling
 import generate_graphs
 import organisms_and_population
 import problem_description
-
-# text constants
-FONT_SIZE = 18
-FONT = "Helvetica"
-
-# starting screen
-STARTSCREEN_BG_POS = {"relx": 0.1, "rely": 0.02, "relheight": 0.5, "relwidth": 0.8}
-STARTSCREEN_LABEL_POS = {"relx": 0.2, "rely": 0.05, "relheight": 0.4, "relwidth": 0.6}
-STARTSCREEN_BUTTON_POS = {"relx": 0.25, "rely": 0.6, "relwidth": 0.5, "relheight": 0.3}
-
-# backgrounds
-BG_COLORS = ["lightgrey", "lightgreen", "lightgrey"]
-GRAPH_BG_POS = {"relx": 0, "rely": 0.055, "relheight": 0.87, "relwidth": 0.76}
-SELECTOR_BG_POS = {"relx": 0.76, "rely": 0, "relheight": 1, "relwidth": 0.3}
-VIEW_BUTTONS_BG_POS = {"relx": 0.02, "rely": 0, "relheight": 0, "relwidth": 0}
-
-# graphs positions
-COST_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.6, "relwidth": 0.74}
-POPULATION_GRAPH_POS = {"relx": 0.02, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
-TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
-
-# citygraph positions
-CITY_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.75, "relwidth": 0.74}
-LEFTARROW_POS = {"relx": 0.1, "rely": 0.1}  # TODO: implement me
-RIGHTARROW_POS = {"relx": 0.2, "rely": 0.2}  # TODO: implement me
-
-# graph buttons
-GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
-CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.935}
-SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.935}
-
-# algorithm parameter labels
-TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
-                  "Limit pokoleń (ogólny)"]
-# TEXTBOX_VALUES = [100, 25, 5, 100, 9999]
-CHECKBOX_LABELS = ["crossing", "selection", "mutation"]
-FIGURE_LAYERS = ["cost", "population", "time", "city_graph"]
-
-# algorithm parameter selection positions
-NUMBER_PARAMS_POS = {"relx": 0.77, "rely": 0.05, "relheight": 0.21, "relwidth": 0.22}
-CROSSING_SELECT_POS = {"relx": 0.8, "rely": 0.27, "relheight": 0.19, "relwidth": 0.16}
-SELECTION_SELECT_POS = {"relx": 0.8, "rely": 0.47, "relheight": 0.19, "relwidth": 0.16}
-MUTATION_SELECT_POS = {"relx": 0.8, "rely": 0.67, "relheight": 0.27, "relwidth": 0.16}
-
-# generate solution button
-MAIN_LABEL_POS = {"relx": 0.15, "rely": 0.01, "relheight": 0.04, "relwidth": 0.5}
-GENERATE_SOLUTION_POS = {"relx": 0.53, "rely": 0.935}
+from gui_config import *
 
 
 class GUI:
@@ -65,18 +19,24 @@ class GUI:
     """
 
     def __init__(self):
+        """
+        Initialize all atributes related to GUI
+        """
         # init text
         self.font = FONT
         self.font_size1 = FONT_SIZE
         self.font_size2_memory = FONT_SIZE * 0.75
         self.font_size2 = ceil(self.font_size2_memory)
 
-        # config and data
+        # algo input
         self.config = {}
         self.TPO = problem_description.TransportProblemObject()
         self.population = organisms_and_population.Population([])
-        # TODO: add self.best = Organism()
-        # TODO: add self.extra_data: dict = {} with all post algorithm information
+
+        # algo output
+        self.extra_data = {}
+        self.best = None
+        #TODO: add  = organisms_and_population.Organism()
 
         # init window
         self.root = tk.Tk()
@@ -101,14 +61,21 @@ class GUI:
         self.checktype['mutation'] = [tk.IntVar(value=1) for _ in range(5)]
         self.checklists = {name: tk.Frame(self.root) for name in CHECKBOX_LABELS}
 
-        # generate solution button
+        # generate solution
         self.main_label = tk.Label()
         self.button = tk.Button()
+        self.stopbutton = tk.Button()
+        self.is_running = False
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
         self.graphbuttons = [tk.Button() for _ in GRAPHBUTTON_LABELS]
+        self.leftarrow = tk.Button(self.root, text="<--", font=(self.font, self.font_size2),
+                                   command=self.show_prev_package)
+        self.rightarrow = tk.Button(self.root, text="-->", font=(self.font, self.font_size2),
+                                    command=self.show_next_package)
+        self.cur_package_id = 0
 
         # print results
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)  # close window handling
@@ -156,7 +123,7 @@ class GUI:
         self.main_label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
                                    font=(self.font, self.font_size1))
         self.main_label.place(**STARTSCREEN_LABEL_POS)
-        self.button = tk.Button(self.root, text="START", command=self.place_everything)
+        self.button = tk.Button(self.root, text="START", command=self.place_everything, cursor="sizing")
         self.button.place(**STARTSCREEN_BUTTON_POS)
 
     def close_window(self):
@@ -227,8 +194,13 @@ class GUI:
         # solution button
         self.button.place_forget()
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
-                                command=self.generate_solution)
+                                command=self.generate_solution, cursor="sizing", bg="lightgreen")
         self.button.place(**GENERATE_SOLUTION_POS)
+
+        # self.stopbutton.place_forget()
+        # self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
+        #                         command=self.stop_algorithm, cursor="pirate", bg="darkgrey")
+        # self.stopbutton.place(**STOP_SOLUTION_POS)
 
         # graph button
         self.graphbuttons[0].place_forget()
@@ -300,7 +272,7 @@ class GUI:
 
     def draw_graphs(self) -> tuple[Figure, Figure, Figure]:
         """
-        Draw figures from self.extra data
+        Draw figures from self.extra_data
         :return: Cost figure, Population figure, Time figure
         """
         # self.extra data required
@@ -351,6 +323,8 @@ class GUI:
         Choose city graph as the one shown in the GUI
         :return:
         """
+        self.leftarrow.place(**LEFTARROW_POS)
+        self.rightarrow.place(**RIGHTARROW_POS)
         self.clear_graphs()
         self.update_city_graph()
 
@@ -359,8 +333,26 @@ class GUI:
         Choose solution graphs as the one shown in the GUI
         :return:
         """
+        self.leftarrow.place_forget()
+        self.rightarrow.place_forget()
         self.clear_city_graph()
         self.update_graphs()
+
+    def show_prev_package(self) -> None:
+        """
+        Show the previous package in an iteration from self.extra_data
+        :return: None
+        """
+        self.cur_package_id -= 1
+        self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
+
+    def show_next_package(self) -> None:
+        """
+        Show the next package in an iteration from self.extra_data
+        :return: None
+        """
+        self.cur_package_id += 1
+        self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
 
     # menu handling
     def create_full_menu(self):
@@ -589,17 +581,6 @@ class GUI:
         print(self.config)
         return
 
-    def generate_solution(self):
-        """
-        Generate a random solution with loaded problem and initial population (.py).
-        :return:
-        """
-        self.update_config()
-
-        # TODO: implement me!
-        # TODO: here we have to start a thread for genetic algorithm
-        print(9999)
-
     # file handling
     def load_graph(self, filename: str = "graph.csv"):
         """
@@ -653,8 +634,9 @@ class GUI:
                                    message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        raise(NotImplementedError)
         # TODO: implement me!
+        # TODO: assess if function is redundant
+        raise (NotImplementedError)
 
     def generate_packages(self):
         """
@@ -665,8 +647,9 @@ class GUI:
                                    message="Czy na pewno chcesz wylosować listę przesylek?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        raise (NotImplementedError)
-        # TODO: implement me!
+        # TODO: assess and test implementation
+        self.TPO.__packages_list = generate_graphs.generate_package_list(self.TPO.__cities_graph)
+
 
     def save_graph(self):
         """
@@ -746,6 +729,46 @@ class GUI:
     #     """
     #     for key in CHECKBOX_LABELS:
     #         self.checktype[key].set(self.config[key])
+
+    def generate_solution(self):
+        """
+        Generate a random solution with loaded problem and initial population (.py).
+        :return:
+        """
+        if self.is_running or not messagebox.askyesno(title="Wygeneruj rozwiązanie",
+                                                      message="Czy na pewno wygenerować rozwiązanie?"):
+            return
+
+        # GUI running indicators
+        self.button.place_forget()
+        self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
+                                command=self.generate_solution, cursor="watch", bg="darkgrey")
+        self.button.place(**GENERATE_SOLUTION_POS)
+
+        self.stopbutton.place_forget()
+        self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
+                                    command=self.stop_algorithm, cursor="pirate", bg="red")
+        self.stopbutton.place(**STOP_SOLUTION_POS)
+
+        # pre running prep
+        self.is_running = True
+        self.update_config()
+
+        # start algorithm
+        # TODO: implement me!
+        # TODO: here we have to start a thread for genetic algorithm
+        print(9999)
+
+    def stop_algorithm(self) -> None:
+        """
+        Stop the algorithm from running. Does nothing if the algorithm does not run
+        :return: None
+        """
+        if not self.is_running or not messagebox.askyesno(title="STOP", message="Czy na pewno zatrzymać rozwiązanie?"):
+            return
+
+        # TODO: assess if implementation is complete
+        self.is_running = False
 
 
 if __name__ == '__main__':

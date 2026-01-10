@@ -194,6 +194,7 @@ class Organism:
     """
 
     def __init__(self, genotype: Genotype, problem):
+        #TODO: add option to init argumentless
         if not isinstance(genotype, Genotype):
             raise TypeError(f"Genotype must be type of {Genotype}, not {type(genotype)}")
         self.__genotype = genotype
