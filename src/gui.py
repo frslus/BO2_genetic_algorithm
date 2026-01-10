@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 
 import file_handling
+import problem_description
 
 # text constants
 FONT_SIZE = 18
@@ -69,6 +70,7 @@ class GUI:
 
         # config and data
         self.config = {}
+        self.TPO = problem_description.TransportProblemObject()
         # TODO: add self.TPO = TransportProblemObject()
         # TODO: add self.population = Population()
         # TODO: add self.best = Organism()
@@ -607,6 +609,12 @@ class GUI:
                                    message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz graf miast",
+                                         filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+        try:
+            self.TPO.__cities_graph = file_handling.load_graph_from_file(path.name)
+        except(AttributeError):
+            return
         # try:
         #     self.config["transport problem"].__cities_graph = file_handling.load_graph_from_file(filename)
         # except KeyError:
@@ -618,10 +626,11 @@ class GUI:
         Handle loading initiaL population from  .csv
         :return:
         """
-        if messagebox.askyesno(title="Załaduj populację",
+        if not messagebox.askyesno(title="Załaduj populację",
                                message="Czy na pewno chcesz załadować populację z pliku?\nAktualnie wczytana zostanie nadpisana!"):
-            # TODO: implement me!
-            pass
+            return
+
+        # TODO: implement me!
 
     def generate_graph(self):
         """
@@ -648,9 +657,17 @@ class GUI:
         Save currently loaded graph to .csv
         :return:
         """
-        if messagebox.askyesno(title="Zapisz graf", message="Czy na pewno chcesz zapisać graf do pliku"):
-            # TODO: implement me!
-            pass
+        if not messagebox.askyesno(title="Zapisz graf", message="Czy na pewno chcesz zapisać graf do pliku"):
+            return
+
+        path = tk.filedialog.asksaveasfile(initialfile='graph.csv', defaultextension=".csv",
+                                           filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
+        try:
+            file_handling.save_graph_to_file(self.TPO.__cities_graph,path.name)
+        except(AttributeError):
+            return
+
+        return
 
     def save_population(self):
         """
@@ -662,10 +679,9 @@ class GUI:
             # TODO: implement me!
             pass
 
-    def save_config(self, filename: str = "config") -> None:
+    def save_config(self) -> None:
         """
         Save view settings config to .json
-        :param filename: Name of the config file to save to. Must be .json
         :return: None
         """
         if not messagebox.askyesno(title="Zapisz ustawienia",
@@ -674,9 +690,11 @@ class GUI:
         path = tk.filedialog.asksaveasfile(initialfile='config.json',defaultextension=".json", filetypes=[("All Files", "*.*"), ("Json Files", "*.json")])
 
         config = dumps(self.config)
-        with open(path.name, mode="w") as file:
-            dump(config, file)
-
+        try:
+            with open(path.name, mode="w") as file:
+                dump(config, file)
+        except(AttributeError):
+            return
         return
 
         # config = dumps(self.config)
@@ -686,22 +704,24 @@ class GUI:
         # with open(path, mode="w") as file:
         #     dump(config, file)
 
-    def load_config(self, filename: str = "config") -> None:
+    def load_config(self) -> None:
         """
         Load view settings config from .json
-        :param filename: Name of the config file to load from. Must be .json
         :return: None
         """
+        if not messagebox.askyesno(title="Załaduj",
+                                   message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
+            return
+
         path = tk.filedialog.askopenfile(mode='r',title="Wybierz konfigurację", filetypes=[("json files", "*.json"), ("All files", "*.*")])
 
-        with open(path.name, mode="r", newline="", encoding="utf-8") as file:
-            self.config = load(file)
+        try:
+            with open(path.name, mode="r", newline="", encoding="utf-8") as file:
+                self.config = load(file)
+        except(AttributeError):
+            return
 
         return
-
-        # if not messagebox.askyesno(title="Załaduj",
-        #                            message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
-        #     return
         #
         # path = f"../data/{filename}.json"
         # with open(path, mode="r", newline="", encoding="utf-8") as file:
