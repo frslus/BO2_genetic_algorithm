@@ -12,16 +12,27 @@ import file_handling
 FONT_SIZE = 18
 FONT = "Helvetica"
 
+#starting screen
+STARTSCREEN_BG_POS = {"relx": 0.1, "rely": 0.02, "relheight": 0.5, "relwidth": 0.8}
+STARTSCREEN_LABEL_POS = {"relx": 0.2, "rely": 0.05, "relheight": 0.4, "relwidth": 0.6}
+STARTSCREEN_BUTTON_POS = {"relx": 0.25, "rely": 0.6,"relwidth": 0.5, "relheight": 0.3}
+
+#backgrounds
+BG_COLORS = ["lightgrey", "lightgreen", "lightgrey"]
+GRAPH_BG_POS = {"relx": 0, "rely": 0.055, "relheight": 0.87, "relwidth": 0.76}
+SELECTOR_BG_POS = {"relx": 0.76, "rely": 0, "relheight": 1, "relwidth": 0.3}
+VIEW_BUTTONS_BG_POS = {"relx": 0.02, "rely": 0, "relheight": 0, "relwidth": 0}
+
 # graph positions
-COST_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.6, "relwidth": 0.75}
+COST_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.6, "relwidth": 0.74}
 POPULATION_GRAPH_POS = {"relx": 0.02, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
 TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35}
 CITY_GRAPH_POS = {"relx": 0.2, "rely": 0.2}
 
 # graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
-CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.92}
-SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.92}
+CITY_BUTTON_POS = {"relx": 0.07, "rely": 0.935}
+SOL_BUTTON_POS = {"relx": 0.15, "rely": 0.935}
 
 # algorithm parameter labels
 TEXTBOX_LABELS = ["Wielkość populacji", "Ilość rodziców[%]", "Szansa mutacji [%]", "Limit pokoleń (bez poprawy)",
@@ -36,7 +47,9 @@ CROSSING_SELECT_POS = {"relx": 0.8, "rely": 0.27, "relheight": 0.19, "relwidth":
 SELECTION_SELECT_POS = {"relx": 0.8, "rely": 0.47, "relheight": 0.19, "relwidth": 0.16}
 MUTATION_SELECT_POS = {"relx": 0.8, "rely": 0.67, "relheight": 0.27, "relwidth": 0.16}
 
-GENERATE_SOLUTION_POS = {"relx": 0.55, "rely": 0.92}
+#generate solution button
+MAIN_LABEL_POS = {"relx": 0.15, "rely": 0.01, "relheight": 0.04, "relwidth": 0.5}
+GENERATE_SOLUTION_POS = {"relx": 0.53, "rely": 0.935}
 
 class GUI:
     """
@@ -65,6 +78,9 @@ class GUI:
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.view_menu = tk.Menu(self.menu_bar, tearoff=0)
 
+        #background
+        self.rectangles = [tk.Canvas(self.root, bg=color) for color in BG_COLORS]
+
         # text fields
         textbox_count = len(TEXTBOX_LABELS)
         self.textboxes = [tk.Text() for _ in range(textbox_count)]
@@ -80,7 +96,6 @@ class GUI:
         # generate solution button
         self.main_label = tk.Label()
         self.button = tk.Button()
-        self.has_iter_limit = tk.IntVar(value=1)
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
@@ -92,6 +107,16 @@ class GUI:
         self.starting_screen()
         self.root.mainloop()
 
+    #background management
+    def place_backgrounds(self) -> None:
+        """
+        Place backgrounds on the homescreen according to constants
+        :return: None
+        """
+        self.rectangles[0].place(**SELECTOR_BG_POS)
+        self.rectangles[1].place(**GRAPH_BG_POS)
+
+
     # screen management
     def place_everything(self):
         """
@@ -100,6 +125,7 @@ class GUI:
         """
         self.update_window_params()
         self.create_full_menu()
+        self.place_backgrounds()
         self.root.config(menu=self.menu_bar)
         self.update_text_elements()
         self.place_all_selectors()
@@ -119,11 +145,12 @@ class GUI:
         :return: None
         """
         self.update_window_params()
+        self.rectangles[0].place(**STARTSCREEN_BG_POS)
         self.main_label = tk.Label(text="PROBLEM TRANSPORTOWY\nALGORYTM GENETYCZNY\nBADANIA OPERACYJNE 2",
                                    font=(self.font, self.font_size1))
-        self.main_label.pack()
+        self.main_label.place(**STARTSCREEN_LABEL_POS)
         self.button = tk.Button(self.root, text="START", command=self.place_everything)
-        self.button.place(relx=0.45, rely=0.15)
+        self.button.place(**STARTSCREEN_BUTTON_POS)
 
     def close_window(self):
         """
@@ -152,9 +179,9 @@ class GUI:
         :return:
         """
         # label
-        self.main_label.pack_forget()
+        self.main_label.place_forget()
         self.main_label = tk.Label(self.root, text="Algorytm Genetyczny", font=(self.font, self.font_size1))
-        self.main_label.pack()
+        self.main_label.place(**MAIN_LABEL_POS)
 
         # textbox
         for i in range(5):
