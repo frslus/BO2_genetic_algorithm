@@ -106,6 +106,7 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
 def wrapped_genetic_algorithm(gui, run_flag):
     gui.best = genetic_algorithm(gui.TPO, gui.config, gui.extra_data_lock,
                                  gui.extra_data, gui.population, run_flag)
+    print("DEAD 2")
 
 def genetic_algorithm_controller(gui):
     run_flag = [True]
@@ -131,4 +132,6 @@ def genetic_algorithm_controller(gui):
         #print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
     else:
         gui.is_running = False
+        gui.root.after(0, lambda: gui.draw_package_routes())
     print(gui.best.cost())
+    print("DEAD 1")

@@ -315,12 +315,22 @@ class GUI:
         if self.best is None:
             return
         routes = []
-        for ch in self.best:
-            fig_route, ax_route = self.draw_map(True)
+        for i, ch in enumerate(self.best):
+            print(ch)
+            fig_route, ax_route = plt.subplots()
             if self.TPO.graph is None:
                 return
             cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
-            vx = [for gene in ch]
+            vx = [cities_data[self.TPO.list[i]["city_from"]][0]] + [cities_data[gene.city_to][0] for gene in ch]
+            vy = [cities_data[self.TPO.list[i]["city_from"]][1]] + [cities_data[gene.city_to][1] for gene in ch]
+            print(vx, vy)
+            ax_route.plot(vx, vy, "b")
+            vx = [cities_data[elem][0] for elem in cities_data]
+            vy = [cities_data[elem][1] for elem in cities_data]
+            ax_route.plot(vx, vy, "ro")
+            plt.close(fig_route)
+            routes.append(fig_route)
+        self.package_routes = routes
 
     def draw_map(self, return_ax: bool = False):
         fig_map, ax_map = plt.subplots()
@@ -329,7 +339,7 @@ class GUI:
         cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
         vx = [cities_data[elem][0] for elem in cities_data]
         vy = [cities_data[elem][1] for elem in cities_data]
-        ax_map.plot(vx, vy,"ro")
+        ax_map.plot(vx, vy, "ro")
         fig_map.show()
         return fig_map, ax_map if return_ax else fig_map
 
