@@ -294,18 +294,32 @@ class GUI:
         fig_cost, ax_cost = plt.subplots()
         vy1 = self.extra_data["best_overall"][:]
         vy2 = self.extra_data["mean_in_iter"][:]
-        ax_cost.plot(vx, vy1)
-        ax_cost.plot(vx, vy2)
+        ax_cost.plot(vx, vy1,"r")
+        ax_cost.plot(vx, vy2,"b")
+        ax_cost.set_xlabel("Iteracja")
+        ax_cost.set_ylabel("Wartość funkcji celu")
+        ax_cost.set_title("Średnia i najlepsza wartość funkcji celu w danej iteracji")
+        ax_cost.grid(True,color=(0.7, 0.7, 0.7))
+        ax_cost.set_xlim(0,self.extra_data["iterations"])
+        ax_cost.legend(["Najlepsza wartość", "Średnia wartość"],loc="upper right")
 
         # time margins graph
         fig_time, ax_time = plt.subplots()
         vy1 = self.extra_data["time_margin"][:]
-        ax_time.plot(vx, vy1)
+        ax_time.plot(vx, vy1,"g")
+        ax_time.set_xlabel("Iteracja")
+        ax_time.set_ylabel("Terminowość")
+        ax_time.set_title("Terminowość najlepszego rozwiązania")
+        ax_time.grid(True, color=(0.7, 0.7, 0.7))
 
         # alive percent of new generation graph
         fig_population, ax_population = plt.subplots()
         vy1 = [100 * elem for elem in self.extra_data["alive_percent"]]
-        ax_population.plot(vx, vy1)
+        ax_population.plot(vx, vy1, "m")
+        ax_population.set_xlabel("Iteracja")
+        ax_population.set_ylabel("%")
+        ax_population.set_title("Procent organizmów spełniających ograniczenia")
+        ax_population.grid(True, color=(0.7, 0.7, 0.7))
 
         self.fig_cost = fig_cost
         self.fig_time = fig_time
@@ -321,13 +335,22 @@ class GUI:
             if self.TPO.graph is None:
                 return
             cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
-            vx = [cities_data[self.TPO.list[i]["city_from"]][0]] + [cities_data[gene.city_to][0] for gene in ch]
-            vy = [cities_data[self.TPO.list[i]["city_from"]][1]] + [cities_data[gene.city_to][1] for gene in ch]
-            print(vx, vy)
-            ax_route.plot(vx, vy, "b")
-            vx = [cities_data[elem][0] for elem in cities_data]
-            vy = [cities_data[elem][1] for elem in cities_data]
-            ax_route.plot(vx, vy, "ro")
+            vx1 = [cities_data[self.TPO.list[i]["city_from"]][0]] + [cities_data[gene.city_to][0] for gene in ch]
+            vy1 = [cities_data[self.TPO.list[i]["city_from"]][1]] + [cities_data[gene.city_to][1] for gene in ch]
+            ax_route.plot(vx1, vy1, "b")
+            vx2 = [cities_data[elem][0] for elem in cities_data]
+            vy2 = [cities_data[elem][1] for elem in cities_data]
+            ax_route.plot(vx2, vy2, "ro")
+            delta_x = max(vx2) - min(vx2)
+            delta_y = max(vy2) - min(vy2)
+            for elem in cities_data:
+                ax_route.text(cities_data[elem][0] + delta_x / 40, cities_data[elem][1] - delta_y / 40, elem)
+            labels = [(gene.mode_of_transit, gene.date) for gene in ch]
+            for j in range(len(ch)):
+                ax_route.text((vx1[j] + vx1[j + 1]) / 2 + delta_x / 40, (vy1[j] + vy1[j + 1]) / 2 - delta_y / 40, labels[j])
+            ax_route.set_xlabel("Współrzędna x")
+            ax_route.set_ylabel("Współrzędna y")
+            ax_route.set_title(f"Przesyłka {i + 1}")
             plt.close(fig_route)
             routes.append(fig_route)
         self.package_routes = routes
@@ -339,7 +362,13 @@ class GUI:
         cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
         vx = [cities_data[elem][0] for elem in cities_data]
         vy = [cities_data[elem][1] for elem in cities_data]
+        delta_x = max(vx) - min(vx)
+        delta_y = max(vy) - min(vy)
+        for elem in cities_data:
+            ax_map.text(cities_data[elem][0] + delta_x / 40, cities_data[elem][1] - delta_y / 40, elem)
         ax_map.plot(vx, vy, "ro")
+        ax_map.set_xlabel("Współrzędna x")
+        ax_map.set_ylabel("Współrzędna y")
         fig_map.show()
         return fig_map, ax_map if return_ax else fig_map
 
