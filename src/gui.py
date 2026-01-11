@@ -72,6 +72,10 @@ class GUI:
         self.stopbutton = tk.Button()
         self.is_running = False
         self.genetic_thread = None
+        self.control_thread = None
+        self.fig_cost = None
+        self.fig_time = None
+        self.fig_population = None
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
@@ -219,37 +223,37 @@ class GUI:
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
     # TODO: add function creating figure
-    def update_cost_graph(self, fig: Figure = None) -> None:
+    def update_cost_graph(self) -> None:
         """
         Plot given figure object as cost graph
         :param fig: matplotlib figure containing graph
         :return: None
         """
-        fig = self.create_test_figure() if fig is None else fig
+        fig = self.create_test_figure() if self.fig_cost is None else self.fig_cost
 
         self.canvas['cost'].get_tk_widget().place_forget()
         self.canvas['cost'] = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas['cost'].get_tk_widget().place(**COST_GRAPH_POS)
 
-    def update_population_graph(self, fig: Figure = None) -> None:
+    def update_population_graph(self) -> None:
         """
         Plot given figure object as population graph
         :param fig: matplotlib figure containing graph
         :return: None
         """
-        fig = self.create_test_figure() if fig is None else fig
+        fig = self.create_test_figure() if self.fig_population is None else self.fig_population
 
         self.canvas['population'].get_tk_widget().place_forget()
         self.canvas['population'] = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas['population'].get_tk_widget().place(**POPULATION_GRAPH_POS)
 
-    def update_time_graph(self, fig: Figure = None) -> None:
+    def update_time_graph(self) -> None:
         """
         Plot given figure object as time graph
         :param fig: matplotlib figure containing graph
         :return: None
         """
-        fig = self.create_test_figure() if fig is None else fig
+        fig = self.create_test_figure() if self.fig_time is None else self.fig_time
 
         self.canvas['time'].get_tk_widget().place_forget()
         self.canvas['time'] = FigureCanvasTkAgg(fig, master=self.root)
@@ -276,7 +280,7 @@ class GUI:
 
         return fig
 
-    def draw_graphs(self) -> tuple[Figure, Figure, Figure]:
+    def draw_graphs(self) -> None:
         """
         Draw figures from self.extra_data
         :return: Cost figure, Population figure, Time figure
@@ -288,27 +292,25 @@ class GUI:
         # cost graph
         fig_cost, ax_cost = plt.subplots()
         vy1 = self.extra_data["best_overall"][:]
-        print(vy1)
         vy2 = self.extra_data["mean_in_iter"][:]
-        print(vy2)
         ax_cost.plot(vx, vy1)
         ax_cost.plot(vx, vy2)
 
         # time margins graph
         fig_time, ax_time = plt.subplots()
         vy1 = self.extra_data["time_margin"][:]
-        print(vy1)
         ax_time.plot(vx, vy1)
 
         # alive percent of new generation graph
         fig_population, ax_population = plt.subplots()
         vy1 = [100*elem for elem in self.extra_data["alive_percent"]]
-        print(vy1)
         ax_population.plot(vx, vy1)
 
-        return fig_cost, fig_time, fig_population
+        self.fig_cost = fig_cost
+        self.fig_time = fig_time
+        self.fig_population = fig_population
 
-    def update_graphs(self, fig_cost: Figure = None, fig_population: Figure = None, fig_time: Figure = None) -> None:
+    def update_graphs(self) -> None:
         """
         Update graphs in GUI with given figures
         :param fig_cost: new cost graph
@@ -316,9 +318,9 @@ class GUI:
         :param fig_time: new time graph
         :return: None
         """
-        self.update_cost_graph(fig_cost)
-        self.update_time_graph(fig_time)
-        self.update_population_graph(fig_population)
+        self.update_cost_graph()
+        self.update_time_graph()
+        self.update_population_graph()
 
     def clear_graphs(self) -> None:
         """
@@ -782,31 +784,13 @@ class GUI:
         self.is_running = True
         if not self.config:
             self.update_config()
-        last_processed_iter = 0
 
         # start algorithm
         # TODO: implement me!
         # TODO: here we have to start a thread for genetic algorithm
-        self.genetic_thread = threading.Thread(target=wrapped_genetic_algorithm,args=[self])
-        self.genetic_thread.start()
+        self.control_thread = threading.Thread(target=genetic_algorithm_controller, args=[self])
+        self.control_thread.start()
         print("algorithm started")
-        while self.genetic_thread.is_alive():
-            if not self.is_running:
-                self.genetic_thread.join()
-                break
-            with self.extra_data_lock:
-                if "iterations" in self.extra_data and last_processed_iter < self.extra_data["iterations"]:
-                    fig_cost, fig_time, fig_population = self.draw_graphs()
-                    self.update_graphs(fig_cost, fig_time, fig_population)
-                    plt.close(fig_cost)
-                    plt.close(fig_time)
-                    plt.close(fig_population)
-                    last_processed_iter = self.extra_data["iterations"]
-            time.sleep(0.5)
-            print("iterations: ", last_processed_iter)
-        else:
-            self.is_running = False
-        print(self.best.cost())
 
     def stop_algorithm(self) -> None:
         """
