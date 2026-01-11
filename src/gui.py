@@ -76,6 +76,7 @@ class GUI:
         self.fig_cost = None
         self.fig_time = None
         self.fig_population = None
+        self.package_routes = [self.draw_map()]
 
         # graphs
         # self.figures = {name: Figure() for name in FIGURE_LAYERS}
@@ -303,12 +304,34 @@ class GUI:
 
         # alive percent of new generation graph
         fig_population, ax_population = plt.subplots()
-        vy1 = [100*elem for elem in self.extra_data["alive_percent"]]
+        vy1 = [100 * elem for elem in self.extra_data["alive_percent"]]
         ax_population.plot(vx, vy1)
 
         self.fig_cost = fig_cost
         self.fig_time = fig_time
         self.fig_population = fig_population
+
+    def draw_package_routes(self):
+        if self.best is None:
+            return
+        routes = []
+        for ch in self.best:
+            fig_route, ax_route = self.draw_map(True)
+            if self.TPO.graph is None:
+                return
+            cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
+            vx = [for gene in ch]
+
+    def draw_map(self, return_ax: bool = False):
+        fig_map, ax_map = plt.subplots()
+        if self.TPO.graph is None:
+            return fig_map
+        cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
+        vx = [cities_data[elem][0] for elem in cities_data]
+        vy = [cities_data[elem][1] for elem in cities_data]
+        ax_map.plot(vx, vy,"ro")
+        fig_map.show()
+        return fig_map, ax_map if return_ax else fig_map
 
     def update_graphs(self) -> None:
         """
@@ -375,7 +398,7 @@ class GUI:
         :return: None
         """
         self.cur_package_id -= 1
-        self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
+        self.update_city_graph(self.package_routes[self.cur_package_id])
 
     def show_next_package(self) -> None:
         """
@@ -383,7 +406,7 @@ class GUI:
         :return: None
         """
         self.cur_package_id += 1
-        self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
+        self.update_city_graph(self.package_routes[self.cur_package_id])
 
     # menu handling
     def create_full_menu(self):
@@ -626,6 +649,7 @@ class GUI:
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
             self.TPO.reload_graph(path.name)
+            self.fig_map = self.draw_map()
         except(AttributeError):
             return
 
