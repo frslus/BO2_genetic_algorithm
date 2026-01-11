@@ -160,13 +160,13 @@ def assign_airports(graph: nx.MultiGraph, airports: dict[city_id, bool] = None, 
     return airports
 
 
-def assign_plane_costs(graph: nx.MultiGraph, *, plane_mult: float = 1.5, plane_cost_noise: float = 0,
+def assign_plane_costs(graph: nx.MultiGraph, *, plane_mult: float = 1.5, plane_noise: float = 0,
                        **kwargs) -> edge_data:
     """
     Assign plane costs between cities. Calculates distances if they have not been calculated yet.
     :param graph: The multigraph representation of cities, with distances between them and specified having airport or not.
     :param plane_mult: The multiplier for plane costs.
-    :param plane_cost_noise: The noise constant of the multiplier. Must be no greater than the multiplier
+    :param plane_noise: The noise constant of the multiplier. Must be no greater than the multiplier
     :return: dictionary of edge:plane_cost
     """
     # init
@@ -193,7 +193,7 @@ def assign_plane_costs(graph: nx.MultiGraph, *, plane_mult: float = 1.5, plane_c
                 continue
 
             # calculate each edge and assign
-            plane_cost = randomize_data(graph[city_from][city_to]['distance']['cost'], plane_mult, plane_cost_noise)
+            plane_cost = randomize_data(graph[city_from][city_to]['distance']['cost'], plane_mult, plane_noise)
             graph.add_edge(city_from, city_to, key="plane", cost=plane_cost)
             plane_costs[(city_from, city_to)] = plane_cost
 
