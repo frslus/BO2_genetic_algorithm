@@ -464,18 +464,21 @@ class GUI:
         """
         # load from file
         self.file_menu.add_command(label="Wczytaj miasta", command=self.load_graph)
+        self.file_menu.add_command(label="Wczytaj przesyłki", command=self.load_packages)
         self.file_menu.add_command(label="Wczytaj populację", command=self.load_population)
         self.file_menu.add_command(label="Wczytaj konfigurację", command=self.load_config)
         self.file_menu.add_separator()
 
         # randomize
         self.file_menu.add_command(label="Wylosuj miasta", command=self.generate_graph)
+        self.file_menu.add_command(label="Wylosuj przesyłki", command=self.generate_packages)
         self.file_menu.add_command(label="Wylosuj populację", command=self.generate_population)
         self.file_menu.add_command(label="Wylosuj przesyłki", command=self.generate_packages)
         self.file_menu.add_separator()
 
         # save loaded
         self.file_menu.add_command(label="Zapisz miasta", command=self.save_graph)
+        self.file_menu.add_command(label="Zapisz przesyłki", command=self.save_packages)
         self.file_menu.add_command(label="Zapisz populację", command=self.save_population)
         self.file_menu.add_command(label="Zapisz konfigurację", command=self.save_config)
         # self.view_menu.add_separator()
@@ -494,8 +497,8 @@ class GUI:
         self.view_menu.add_separator()
 
         self.view_menu.add_command(label="Przywróć rozmiar tekstu", command=self.reset_font_size)
-        self.view_menu.add_command(label="TEST1", command=self.update_config)
-        self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
+        # self.view_menu.add_command(label="TEST1", command=self.update_config)
+        # self.view_menu.add_command(label="TEST2", command=self.select_mutation_type)
 
         self.menu_bar.add_cascade(menu=self.view_menu, label="Widok")
 
@@ -675,7 +678,7 @@ class GUI:
         return
 
     # file handling
-    def load_graph(self, filename: str = "graph.csv"):
+    def load_graph(self):
         """
         Handle loading graph from  .csv
         :return:
@@ -692,7 +695,22 @@ class GUI:
         except(AttributeError):
             return
 
-    def load_population(self):
+    def load_packages(self) -> None:
+        """
+        handle loading package list from .csv
+        :return" None
+        """
+        if not messagebox.askyesno(title="Załaduj przesyłki",
+                                   message="Czy na pewno chcesz załadować listę przesyłek z pliku?\nAktualnie wczytana zostanie nadpisana!"):
+            return
+
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz listę przesyłek",
+                                         filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+        try:
+            self.TPO.reload_list(path.name)
+        except(AttributeError):
+            return
+    def load_population(self) -> None:
         """
         Handle loading initiaL population from  .csv
         :return:
@@ -718,6 +736,18 @@ class GUI:
             return
 
         self.TPO.reload_graph(generate_graphs.create_complete_graph())
+
+    def generate_packages(self) -> None:
+        """
+        handle generating random package list from generate_graph.py
+        :return" None
+        """
+        if not messagebox.askyesno(title="Wylosuj przesylki",
+                                   message="Czy na pewno chcesz wylosować listę przesyłek?\nAktualnie wczytana zostanie nadpisana!"):
+            return
+
+        self.TPO.reload_list(generate_graphs.generate_package_list(self.TPO.__cities_graph))
+        #self.TPO.__packages_list = generate_graphs.generate_packages(self.TPO.__cities_graph)
 
     def generate_population(self):
         """
@@ -755,7 +785,24 @@ class GUI:
         path = tk.filedialog.asksaveasfile(initialfile='graph.csv', defaultextension=".csv",
                                            filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
         try:
-            file_handling.save_graph_to_file(self.TPO.graph, path.name)
+            file_handling.save_graph_to_file(self.TPO.__cities_graph, path.name)
+        except(AttributeError):
+            return
+
+        return
+
+    def save_packages(self) -> None:
+        """
+        handle saving currently loaded package list
+        :return" None
+        """
+        if not messagebox.askyesno(title="Zapisz przesyłki", message="Czy na pewno chcesz zapisać listę przyesyłek do pliku"):
+            return
+
+        path = tk.filedialog.asksaveasfile(initialfile='packages.csv', defaultextension=".csv",
+                                           filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
+        try:
+            file_handling.save_list_to_file(self.TPO.__packages_list, path.name)
         except(AttributeError):
             return
 
