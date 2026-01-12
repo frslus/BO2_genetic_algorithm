@@ -25,8 +25,11 @@ def generate_population(problem: TransportProblemObject, population_size: int, a
         if new_organism.cost() == INF:
             if len(dead_organisms) < population_size - alive_number:
                 dead_organisms.append(new_organism)
+            # print("Dead")
         else:
             alive_organisms.append(new_organism)
+            print("Alive")
+        print(new_organism)
     population = Population(alive_organisms + dead_organisms)
     return population
 

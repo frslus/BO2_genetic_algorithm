@@ -21,16 +21,18 @@ def save_extra_data(extra_data, filename):
 
 
 # graph
-GRAPH_FILE = "../data/simple6_graph.csv"
+GRAPH_FILE = "../data/graph20.csv"
 
 # packages
-PACKAGES_FILE = "../data/simple6_list.csv"
+PACKAGES_FILE = "../data/packages50_graph20.csv"
 
 # population
 CREATE_POPULATION = True
 POPULATION_FILE = "../data/simple6_population.csv"
-POPULATION_SIZE = 100
-ALIVE_NUMBER = 50
+POPULATION_SIZE = 5
+ALIVE_NUMBER = 0
+
+# DO NOT TOUCH
 GENERATED_CHROMOSOME_MAX_LENGTH = 4
 ADDITION_CHANCE = 0.3
 
@@ -38,7 +40,7 @@ ADDITION_CHANCE = 0.3
 config = {
     "population_size": POPULATION_SIZE,
     "total_iterations": 100000,
-    "stagnation_iterations": 30,
+    "stagnation_iterations": 300,
     "parent_percent": 0.3,
     "mutation_chance": 0.1,
     "selection_type": "ranking",
@@ -59,6 +61,7 @@ else:
     population = Population(PACKAGES_FILE)
 
 best = genetic_algorithm(tpo, config, None, extra_data, population, None)
+print(best)
 
 save_extra_data(extra_data, EXTRA_DATA_PATH)
 save_score(HISTORY_PATH, NAME, extra_data["iterations"], best.cost())
