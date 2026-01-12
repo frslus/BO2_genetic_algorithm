@@ -31,7 +31,7 @@ def generate_population(problem: TransportProblemObject, population_size: int, a
     return population
 
 
-def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, extra_data_lock = None,
+def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, extra_data_lock=None,
                       extra_data: dict | None = None, initial_population: Population | None = None,
                       run_flag: list | None = None) -> Organism:
     if isinstance(config_file, str):
@@ -57,7 +57,14 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
 
     # variables
     if extra_data is not None:
-        with extra_data_lock:
+        if extra_data_lock is not None:
+            with extra_data_lock:
+                extra_data["iterations"] = 0
+                extra_data["best_overall"] = []
+                extra_data["mean_in_iter"] = []
+                extra_data["time_margin"] = []
+                extra_data["alive_percent"] = []
+        else:
             extra_data["iterations"] = 0
             extra_data["best_overall"] = []
             extra_data["mean_in_iter"] = []
@@ -87,7 +94,14 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
             best_score = population.best().cost()
             best_score_iter = i
         if extra_data is not None:
-            with extra_data_lock:
+            if extra_data_lock is not None:
+                with extra_data_lock:
+                    extra_data["iterations"] += 1
+                    extra_data["best_overall"].append(best_score)
+                    extra_data["mean_in_iter"].append(population.mean_cost())
+                    extra_data["time_margin"].append(population.best().time_margin())
+                    extra_data["alive_percent"].append(alive_percent)
+            else:
                 extra_data["iterations"] += 1
                 extra_data["best_overall"].append(best_score)
                 extra_data["mean_in_iter"].append(population.mean_cost())
@@ -96,8 +110,7 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
-        #print(
-            #f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
+        print(f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
     else:
         print(f"Algorithm stopped - iteration limit reached")
     return population.best()
@@ -107,6 +120,7 @@ def wrapped_genetic_algorithm(gui, run_flag):
     gui.best = genetic_algorithm(gui.TPO, gui.config, gui.extra_data_lock,
                                  gui.extra_data, gui.population, run_flag)
     print("DEAD 2")
+
 
 def genetic_algorithm_controller(gui):
     run_flag = [True]
@@ -123,13 +137,13 @@ def genetic_algorithm_controller(gui):
         with gui.extra_data_lock:
             if "iterations" in gui.extra_data and last_processed_iter < gui.extra_data["iterations"]:
                 gui.root.after(0, lambda: gui.draw_graphs())
-                gui.root.after(0,lambda: gui.update_graphs())
+                gui.root.after(0, lambda: gui.update_graphs())
                 gui.root.after(0, lambda: plt.close(gui.fig_cost))
                 gui.root.after(0, lambda: plt.close(gui.fig_time))
                 gui.root.after(0, lambda: plt.close(gui.fig_population))
                 last_processed_iter = gui.extra_data["iterations"]
         time.sleep(0.5)
-        #print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
+        # print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
     else:
         gui.is_running = False
         gui.root.after(0, lambda: gui.draw_package_routes())
