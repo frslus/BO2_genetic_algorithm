@@ -1,7 +1,5 @@
-import time
 import tkinter as tk
 from json import dumps, dump, load
-from math import ceil
 from tkinter import messagebox
 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
@@ -11,10 +9,8 @@ import file_handling
 import generate_graphs
 import organisms_and_population
 import problem_description
-from gui_config import *
-import matplotlib.pyplot as plt
-import threading
 from genetic_algorithm import *
+from gui_config import *
 
 
 class GUI:
@@ -41,7 +37,6 @@ class GUI:
         self.extra_data = {}
         self.extra_data_lock = threading.Lock()
         self.best = None
-        # TODO: add  = organisms_and_population.Organism()
 
         # init window
         self.root = tk.Tk()
@@ -71,6 +66,8 @@ class GUI:
         self.button = tk.Button()
         self.stopbutton = tk.Button()
         self.is_running = False
+
+        # backend connections
         self.genetic_thread = None
         self.control_thread = None
         self.fig_cost = None
@@ -78,7 +75,6 @@ class GUI:
         self.fig_population = None
 
         # graphs
-        # self.figures = {name: Figure() for name in FIGURE_LAYERS}
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
         self.graphbuttons = [tk.Button() for _ in GRAPHBUTTON_LABELS]
         self.leftarrow = tk.Button(self.root, text="<--", font=(self.font, self.font_size2),
@@ -102,10 +98,10 @@ class GUI:
         self.rectangles[1].place(**GRAPH_BG_POS)
 
     # screen management
-    def place_everything(self):
+    def place_everything(self) -> None:
         """
         Places every element of the GUI
-        :return:
+        :return: None
         """
         self.update_window_params()
         self.create_full_menu()
@@ -115,10 +111,10 @@ class GUI:
         self.place_all_selectors()
         self.update_graphs()
 
-    def clear_everything(self):
+    def clear_everything(self) -> None:
         """
         DEBUG FUNCTION. Remove every single element of GUI.
-        :return:
+        :return: None
         """
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -136,7 +132,7 @@ class GUI:
         self.button = tk.Button(self.root, text="START", command=self.place_everything, cursor="sizing")
         self.button.place(**STARTSCREEN_BUTTON_POS)
 
-    def close_window(self):
+    def close_window(self) -> None:
         """
         Handle closing via top right corner X
         :return: None
@@ -147,20 +143,20 @@ class GUI:
             self.root.destroy()
 
     # general updates
-    def update_window_params(self):
+    def update_window_params(self) -> None:
         """
         Update window parameters
-        :return:
+        :return: None
         """
         self.root.title("Problem transportowy PSFŚ")
         self.root.geometry("1000x750")
         self.root.iconbitmap("../GEIcon.ico")
         self.root.configure(bg='lightblue')
 
-    def update_text_elements(self):
+    def update_text_elements(self) -> None:
         """
         Update all text elements of gui with current font and fontsize
-        :return:
+        :return: None
         """
         # label
         self.main_label.place_forget()
@@ -207,11 +203,6 @@ class GUI:
                                 command=self.generate_solution, cursor="sizing", bg="lightgreen")
         self.button.place(**GENERATE_SOLUTION_POS)
 
-        # self.stopbutton.place_forget()
-        # self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
-        #                         command=self.stop_algorithm, cursor="pirate", bg="darkgrey")
-        # self.stopbutton.place(**STOP_SOLUTION_POS)
-
         # graph button
         self.graphbuttons[0].place_forget()
         self.graphbuttons[1].place_forget()
@@ -222,7 +213,6 @@ class GUI:
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
-    # TODO: add function creating figure
     def update_cost_graph(self) -> None:
         """
         Plot given figure object as cost graph
@@ -257,7 +247,6 @@ class GUI:
 
         self.canvas['time'].get_tk_widget().place_forget()
         self.canvas['time'] = FigureCanvasTkAgg(fig, master=self.root)
-        # self.canvas_time.get_tk_widget().place(relx= 0.1, rely=0.1)
         self.canvas['time'].get_tk_widget().place(**TIME_GRAPH_POS)
 
         # creating the Matplotlib toolbar
@@ -282,8 +271,8 @@ class GUI:
 
     def draw_graphs(self) -> None:
         """
-        Draw figures from self.extra_data
-        :return: Cost figure, Population figure, Time figure
+        Draw figures from self.extra_data. Create Cost figure, Population figure, Time figure, store them in right GUI attributes.
+        :return: None
         """
         # self.extra data required
         # variables
@@ -303,7 +292,7 @@ class GUI:
 
         # alive percent of new generation graph
         fig_population, ax_population = plt.subplots()
-        vy1 = [100*elem for elem in self.extra_data["alive_percent"]]
+        vy1 = [100 * elem for elem in self.extra_data["alive_percent"]]
         ax_population.plot(vx, vy1)
 
         self.fig_cost = fig_cost
@@ -352,7 +341,7 @@ class GUI:
     def show_city_graph(self) -> None:
         """
         Choose city graph as the one shown in the GUI
-        :return:
+        :return: None
         """
         self.leftarrow.place(**LEFTARROW_POS)
         self.rightarrow.place(**RIGHTARROW_POS)
@@ -362,7 +351,7 @@ class GUI:
     def show_graphs(self) -> None:
         """
         Choose solution graphs as the one shown in the GUI
-        :return:
+        :return: None
         """
         self.leftarrow.place_forget()
         self.rightarrow.place_forget()
@@ -386,16 +375,15 @@ class GUI:
         self.update_city_graph(self.extra_data["package_routes"][self.cur_package_id])
 
     # menu handling
-    def create_full_menu(self):
+    def create_full_menu(self) -> None:
         """
         Create the full menu
-        :return:
+        :return: None
         """
-        # TODO: assess if function is redundant (= if menu will not be expanded)
         self.create_file_menu()
         self.create_view_menu()
 
-    def create_file_menu(self):
+    def create_file_menu(self) -> None:
         """
         Create the file menu in the upper taskbar
         :return: None
@@ -410,7 +398,7 @@ class GUI:
         # randomize
         self.file_menu.add_command(label="Wylosuj miasta", command=self.generate_graph)
         self.file_menu.add_command(label="Wylosuj przesyłki", command=self.generate_packages)
-        self.file_menu.add_command(label="Wylosuj populację", command=self.generate_population)
+        # self.file_menu.add_command(label="Wylosuj populację", command=self.generate_population)
         self.file_menu.add_command(label="Wylosuj przesyłki", command=self.generate_packages)
         self.file_menu.add_separator()
 
@@ -419,14 +407,13 @@ class GUI:
         self.file_menu.add_command(label="Zapisz przesyłki", command=self.save_packages)
         self.file_menu.add_command(label="Zapisz populację", command=self.save_population)
         self.file_menu.add_command(label="Zapisz konfigurację", command=self.save_config)
-        # self.view_menu.add_separator()
 
         self.menu_bar.add_cascade(menu=self.file_menu, label="Pliki")
 
-    def create_view_menu(self):
+    def create_view_menu(self) -> None:
         """
         Create the visual settings menu in the upper taskbar
-        :return:
+        :return: None
         """
         # adjust config
         self.view_menu.add_command(label="Czcionka +", command=self.increase_font)
@@ -450,17 +437,18 @@ class GUI:
         self.create_selection_selector()
         self.create_crossing_selector()
 
-    def create_crossing_selector(self):
+    def create_crossing_selector(self) -> None:
         """
-        create the checklist with single answer
-        :return:
+        Create the crossing checklist with single answer
+        :return: None
         """
+        # init frame
         self.checklists['crossing'].columnconfigure(0, weight=1)
-
         self.checklabels['crossing'] = tk.Label(self.checklists['crossing'], text="Typ krzyżowania",
                                                 font=(self.font, self.font_size2))
         self.checklabels['crossing'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
+        # fill out with selectors
         crossing_type = self.checktype['crossing']
         check1 = tk.Radiobutton(self.checklists['crossing'], text="1 Cięcie", variable=crossing_type, value=1,
                                 font=(self.font, self.font_size2))
@@ -474,13 +462,18 @@ class GUI:
 
         self.checklists['crossing'].place(**CROSSING_SELECT_POS)
 
-    def create_selection_selector(self):
+    def create_selection_selector(self) -> None:
+        """
+        Create the selection checklist with single answer
+        :return: None
+        """
+        # init frame
         self.checklists['selection'].columnconfigure(0, weight=1)
-
         self.checklabels['selection'] = tk.Label(self.checklists['selection'], text="Typ selekcji",
                                                  font=(self.font, self.font_size2))
         self.checklabels['selection'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
+        # fill out with selectors
         selection_type = self.checktype['selection']
         check1 = tk.Radiobutton(self.checklists['selection'], text="Turniejowa", variable=selection_type, value=1,
                                 font=(self.font, self.font_size2))
@@ -494,13 +487,18 @@ class GUI:
 
         self.checklists['selection'].place(**SELECTION_SELECT_POS)
 
-    def create_mutation_selector(self):
+    def create_mutation_selector(self) -> None:
+        """
+        Create the mutation multi-answered checklist
+        :return: None
+        """
+        # init frame
         self.checklists['crossing'].columnconfigure(0, weight=1)
-
         self.checklabels['mutation'] = tk.Label(self.checklists['mutation'], text="Typy mutacji",
                                                 font=(self.font, self.font_size2))
         self.checklabels['mutation'].grid(row=0, column=0, sticky=tk.W + tk.E)
 
+        # fill out with selectors
         mutation_type = self.checktype['mutation']
         check1 = tk.Checkbutton(self.checklists['mutation'], text="Miasta", font=(self.font, self.font_size2),
                                 variable=mutation_type[0])
@@ -520,27 +518,11 @@ class GUI:
 
         self.checklists['mutation'].place(**MUTATION_SELECT_POS)
 
-    def select_mutation_type(self):
-        """
-        TEST METHOD ONLY
-        Select the type of mutation
-        :return:
-        """
-        mutation_type = self.crossing_type.get()
-
-        # TODO: implement me
-        if mutation_type == 1:
-            print(1)
-        elif mutation_type == 2:
-            print(2)
-        elif mutation_type == 3:
-            print(3)
-
     # text operations
-    def reset_font_size(self):
+    def reset_font_size(self) -> None:
         """
         Reset the font size back to default
-        :return:
+        :return: None
         """
         self.font = FONT
         self.font_size1 = FONT_SIZE
@@ -548,34 +530,31 @@ class GUI:
         self.font_size2 = ceil(self.font_size2_memory)
         self.update_text_elements()
 
-    def increase_font(self):
+    def increase_font(self) -> None:
         """
         Increase font size and update menu
-        :return:
+        :return: None
         """
         self.font_size1 += 2
         self.font_size2_memory += 1.5
-        # print(self.font_size1, self.font_size2_memory)
         self.font_size2 = ceil(self.font_size2_memory)
 
         self.update_text_elements()
 
-    def decrease_font(self):
+    def decrease_font(self) -> None:
         """
-        Decrease font size
-        :return:
+        Decrease font size and update menu
+        :return: None
         """
         self.font_size1 -= 2 if self.font_size2 > 2 else 0
         self.font_size2_memory -= 1.5 if self.font_size2_memory > 1.5 else 0
-
         self.font_size2 = ceil(self.font_size2_memory)
-        # print(self.font_size1, self.font_size2_memory, self.font_size2)
 
         self.update_text_elements()
 
     def update_config(self) -> None:
         """
-        update self.config with data pulled from gui
+        Update self.config with data pulled from gui
         :return: None
         """
         config = self.config
@@ -612,19 +591,20 @@ class GUI:
             mutations_list.append("delete_gene")
         config["mutation_types"] = mutations_list
 
-        print(self.config)
         return
 
     # file handling
-    def load_graph(self):
+    def load_graph(self) -> None:
         """
-        Handle loading graph from  .csv
-        :return:
+        Handle loading graph from .csv
+        :return: None
         """
+        # popup
         if not messagebox.askyesno(title="Załaduj miasta",
                                    message="Czy na pewno chcesz załadować graf z pliku?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
+        # filewindow
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz graf miast",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
@@ -635,27 +615,32 @@ class GUI:
     def load_packages(self) -> None:
         """
         handle loading package list from .csv
-        :return" None
+        :return: None
         """
+        # popup
         if not messagebox.askyesno(title="Załaduj przesyłki",
                                    message="Czy na pewno chcesz załadować listę przesyłek z pliku?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
+        # filewindow
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz listę przesyłek",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
             self.TPO.reload_list(path.name)
         except(AttributeError):
             return
+
     def load_population(self) -> None:
         """
         Handle loading initiaL population from  .csv
-        :return:
+        :return: None
         """
+        #popup
         if not messagebox.askyesno(title="Załaduj populację",
                                    message="Czy na pewno chcesz załadować populację z pliku?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
+        #filewindow
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz populację",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
@@ -663,15 +648,17 @@ class GUI:
         except(AttributeError):
             return
 
-    def generate_graph(self):
+    def generate_graph(self) -> None:
         """
         Handle generating random graph from generate_graph.create_complete_graph
-        :return:
+        :return: None
         """
+        #popup
         if not messagebox.askyesno(title="Wylosuj miasta",
                                    message="Czy na pewno chcesz wylosować graf?\nAktualnie wczytany zostanie nadpisany!"):
             return
 
+        # genration
         self.TPO.reload_graph(generate_graphs.create_complete_graph())
 
     def generate_packages(self) -> None:
@@ -679,46 +666,51 @@ class GUI:
         handle generating random package list from generate_graph.py
         :return" None
         """
+        # popup
         if not messagebox.askyesno(title="Wylosuj przesylki",
                                    message="Czy na pewno chcesz wylosować listę przesyłek?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
+        #generation
         self.TPO.reload_list(generate_graphs.generate_package_list(self.TPO.__cities_graph))
-        #self.TPO.__packages_list = generate_graphs.generate_packages(self.TPO.__cities_graph)
 
-    def generate_population(self):
-        """
-        Handle generating random population
-        :return:
-        """
-        if not messagebox.askyesno(title="Wylosuj populację",
-                                   message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
-            return
+    # def generate_population(self) -> None:
+    #     """
+    #     Handle generating random population
+    #     :return: None
+    #     """
+    #     # popup
+    #     if not messagebox.askyesno(title="Wylosuj populację",
+    #                                message="Czy na pewno chcesz wylosować populację?\nAktualnie wczytana zostanie nadpisana!"):
+    #         return
+    #
+    #     # TODO: implement me!
+    #     # TODO: assess if function is redundant
+    #     raise (NotImplementedError)
 
-        # TODO: implement me!
-        # TODO: assess if function is redundant
-        raise (NotImplementedError)
-
-    def generate_packages(self):
+    def generate_packages(self) -> None:
         """
         Handle generating random packages
+        :return: None
         """
-
+        # popup
         if not messagebox.askyesno(title="Wylosuj przesyłki",
                                    message="Czy na pewno chcesz wylosować listę przesylek?\nAktualnie wczytana zostanie nadpisana!"):
             return
 
-        # TODO: assess and test implementation
+        # generation
         self.TPO.reload_list(generate_graphs.generate_package_list(self.TPO.graph))
 
-    def save_graph(self):
+    def save_graph(self) -> None:
         """
         Save currently loaded graph to .csv
-        :return:
+        :return: None
         """
+        # popup
         if not messagebox.askyesno(title="Zapisz graf", message="Czy na pewno chcesz zapisać graf do pliku"):
             return
 
+        # filewindow
         path = tk.filedialog.asksaveasfile(initialfile='graph.csv', defaultextension=".csv",
                                            filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
         try:
@@ -726,16 +718,18 @@ class GUI:
         except(AttributeError):
             return
 
-        return
 
     def save_packages(self) -> None:
         """
         handle saving currently loaded package list
-        :return" None
+        :return: None
         """
-        if not messagebox.askyesno(title="Zapisz przesyłki", message="Czy na pewno chcesz zapisać listę przyesyłek do pliku"):
+        # popup
+        if not messagebox.askyesno(title="Zapisz przesyłki",
+                                   message="Czy na pewno chcesz zapisać listę przyesyłek do pliku"):
             return
 
+        #filewindow
         path = tk.filedialog.asksaveasfile(initialfile='packages.csv', defaultextension=".csv",
                                            filetypes=[("All Files", "*.*"), ("CSV Files", "*.csv")])
         try:
@@ -745,10 +739,10 @@ class GUI:
 
         return
 
-    def save_population(self):
+    def save_population(self) -> None:
         """
         save currently loaded population to .csv
-        :return:
+        :return: None
         """
         if not messagebox.askyesno(title="Zapisz populację",
                                    message="Czy na pewno chcesz zapisać aktualną populację do pliku"):
@@ -766,12 +760,16 @@ class GUI:
         Save view settings config to .json
         :return: None
         """
+        # popup
         if not messagebox.askyesno(title="Zapisz ustawienia",
                                    message="Czy na pewno chcesz zapisać aktualne ustawienia do pliku"):
             return
+
+        #filewindow
         path = tk.filedialog.asksaveasfile(initialfile='config.json', defaultextension=".json",
                                            filetypes=[("All Files", "*.*"), ("Json Files", "*.json")])
 
+        # dict to .json
         config = dumps(self.config)
         try:
             with open(path.name, mode="w") as file:
@@ -784,13 +782,16 @@ class GUI:
         Load view settings config from .json
         :return: None
         """
+        # popup
         if not messagebox.askyesno(title="Załaduj",
                                    message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
             return
 
+        # filewindow
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz konfigurację",
                                          filetypes=[("json files", "*.json"), ("All files", "*.*")])
 
+        # .json to dict
         try:
             with open(path.name, mode="r", newline="", encoding="utf-8") as file:
                 self.config = load(file)
@@ -799,19 +800,12 @@ class GUI:
 
         return
 
-    # def update_from_config(self) -> None:
-    #     """
-    #     Update checkboxes in gui from current self.config
-    #     :return:
-    #     """
-    #     for key in CHECKBOX_LABELS:
-    #         self.checktype[key].set(self.config[key])
-
-    def generate_solution(self):
+    def generate_solution(self) -> None:
         """
         Generate a random solution with loaded problem and initial population (.py).
-        :return:
+        :return: None
         """
+        # popup
         if self.is_running or not messagebox.askyesno(title="Wygeneruj rozwiązanie",
                                                       message="Czy na pewno wygenerować rozwiązanie?"):
             return
@@ -833,11 +827,8 @@ class GUI:
             self.update_config()
 
         # start algorithm
-        # TODO: implement me!
-        # TODO: here we have to start a thread for genetic algorithm
         self.control_thread = threading.Thread(target=genetic_algorithm_controller, args=[self])
         self.control_thread.start()
-        print("algorithm started")
 
     def stop_algorithm(self) -> None:
         """
@@ -847,7 +838,6 @@ class GUI:
         if not self.is_running or not messagebox.askyesno(title="STOP", message="Czy na pewno zatrzymać rozwiązanie?"):
             return
 
-        # TODO: assess if implementation is complete
         self.is_running = False
 
 

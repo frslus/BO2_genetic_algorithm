@@ -429,12 +429,21 @@ def generate_package_list(graph: nx.MultiGraph, length: int = 10, weight: tuple[
                           timespan: int = 16, min_time: int = 3) -> list[dict]:
     """
     Generate a random package list
+    :param graph: The graph to generate a package list for.
+    :param length: The length of the package list.
+    :param weight: The weight of the packages in the list.
+    :param timespan: The amount of time windows in which packages are sent/received.
+    :param min_time: The minimum time for a package to be delivered.
+    :return: The generated package list as a list of dictionary-packed package info.
     """
+    # init
     cities = list(graph.nodes())
     cities_number = len(cities)
     if (timespan - min_time) < 1 or cities_number < 2:
         return []
     package_list = [{} for _ in range(length)]
+
+    # generating packages
     for package in package_list:
         from_idx = randint(0, cities_number - 1)
         package["city_from"] = cities[from_idx]
@@ -442,4 +451,5 @@ def generate_package_list(graph: nx.MultiGraph, length: int = 10, weight: tuple[
         package["date_ready"] = randint(0, timespan - min_time)
         package["date_delivery"] = randint(package["date_ready"] + min_time, timespan)
         package["weight"] = randint(weight[0], weight[1])
+
     return package_list

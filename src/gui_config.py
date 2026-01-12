@@ -20,8 +20,8 @@ TIME_GRAPH_POS = {"relx": 0.4, "rely": 0.68, "relheight": 0.23, "relwidth": 0.35
 
 # citygraph positions
 CITY_GRAPH_POS = {"relx": 0.01, "rely": 0.065, "relheight": 0.75, "relwidth": 0.74}
-LEFTARROW_POS = {"relx": 0.05, "rely": 0.84}  # TODO: implement me
-RIGHTARROW_POS = {"relx": 0.1, "rely": 0.84}  # TODO: implement me
+LEFTARROW_POS = {"relx": 0.05, "rely": 0.84}
+RIGHTARROW_POS = {"relx": 0.1, "rely": 0.84}
 
 # graph buttons
 GRAPHBUTTON_LABELS = ["Wykresy", "Graf"]
