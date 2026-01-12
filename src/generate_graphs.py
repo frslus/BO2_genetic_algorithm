@@ -59,7 +59,7 @@ def generate_city_name() -> str:
 
 # city generation
 def generate_random_cities(count: int = 5, bounds_x: tuple[int, int] = (0, 1000), bounds_y: tuple[int, int] = (0, 1000),
-                           bounds_cap: tuple[int, int] = (0, 10), *, names: bool = True) -> list[city_params]:
+                           bounds_cap: tuple[int, int] = (3, 10), *, names: bool = True) -> list[city_params]:
     """
     Generate a random list of cities, defined by their cartesian coordinates and capacities.
     :param count: Amount of cities to generate.
