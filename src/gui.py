@@ -722,7 +722,7 @@ class GUI:
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz populację",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
-            self.population = organisms_and_population.load_population_from_file(path.name)
+            self.population = Population(organisms_and_population.load_population_from_file(path.name))
         except(AttributeError):
             return
 
