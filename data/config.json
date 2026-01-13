@@ -1,1 +1,1 @@
-"{}"
+"{\"population_size\": 1, \"parent_percent\": 0.01, \"mutation_chance\": 0.01, \"stagnation_iterations\": 1, \"total_iterations\": 1, \"selection_type\": \"tournament\", \"crossing_types\": \"one_cut\", \"mutation_types\": [\"city\", \"date\", \"transit_mode\", \"new_gene\", \"delete_gene\"]}"

@@ -53,7 +53,8 @@ class GUI:
 
         # text fields
         textbox_count = len(TEXTBOX_LABELS)
-        self.textboxes = [tk.Text() for _ in range(textbox_count)]
+        self.textvars = [tk.StringVar() for _ in range(textbox_count)]
+        self.textboxes = [tk.Entry() for _ in range(textbox_count)]
         self.textbox_labels = [tk.Label() for _ in range(textbox_count)]
         self.textbox_grid = tk.Frame(self.root)
 
@@ -202,7 +203,8 @@ class GUI:
         for i in range(5):
             textbox = self.textboxes[i]
             textbox.place_forget()
-            textbox = tk.Text(self.textbox_grid, height=1, width=5, font=(self.font, self.font_size1))
+            # textbox = tk.Text(self.textbox_grid, height=1, width=5, font=(self.font, self.font_size1))
+            textbox = tk.Entry(self.textbox_grid, textvariable=self.textvars[i], font=(self.font, self.font_size1))
             textbox.grid(row=i, column=1, sticky=tk.W + tk.E)
             self.textboxes[i] = textbox
 
@@ -477,6 +479,7 @@ class GUI:
                                            filetypes=[("All Files", "*.*"), ("Json Files", "*.json")])
 
         # dict to .json
+        self.update_config()
         config = dumps(self.config)
         try:
             with open(path.name, mode="w") as file:
@@ -606,11 +609,16 @@ class GUI:
         config = self.config
 
         # #textbox data
-        config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
-        config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip()) / 100
-        config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip()) / 100
-        config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
-        config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
+        config["population_size"] = int(self.textvars[0].get())
+        config["parent_percent"] = float(self.textvars[1].get()) / 100
+        config["mutation_chance"] = float(self.textvars[2].get()) / 100
+        config["stagnation_iterations"] = int(self.textvars[3].get())
+        config["total_iterations"] = int(self.textvars[4].get())
+        # config["population_size"] = int(self.textboxes[0].get('1.0', tk.END).strip())
+        # config["parent_percent"] = float(self.textboxes[1].get('1.0', tk.END).strip()) / 100
+        # config["mutation_chance"] = float(self.textboxes[2].get('1.0', tk.END).strip()) / 100
+        # config["stagnation_iterations"] = int(self.textboxes[3].get('1.0', tk.END).strip())
+        # config["total_iterations"] = int(self.textboxes[4].get('1.0', tk.END).strip())
 
         # selection checkbox
         selection_type = self.checktype['selection'].get()
@@ -660,6 +668,9 @@ class GUI:
         self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
                                     command=self.stop_algorithm, cursor="pirate", bg="red")
         self.stopbutton.place(**STOP_SOLUTION_POS)
+
+        for entrybox in self.textboxes:
+            entrybox
 
         # pre running prep
         self.is_running = True
