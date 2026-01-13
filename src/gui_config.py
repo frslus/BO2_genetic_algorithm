@@ -45,3 +45,4 @@ MUTATION_SELECT_POS = {"relx": 0.8, "rely": 0.67, "relheight": 0.27, "relwidth":
 MAIN_LABEL_POS = {"relx": 0.15, "rely": 0.01, "relheight": 0.04, "relwidth": 0.5}
 GENERATE_SOLUTION_POS = {"relx": 0.53, "rely": 0.935}
 STOP_SOLUTION_POS = {"relx": 0.45, "rely": 0.935}
+CHECKBOX_PRINT_POS = {"relx": 0.375, "rely": 0.935}
