@@ -725,6 +725,13 @@ class GUI:
             entrybox = tk.Entry(self.textbox_grid,textvariable= self.textvars[i],font=(self.font, self.font_size2))
             entrybox.grid(row=i, column=1, sticky=tk.W + tk.E)
             self.textboxes[i] = entrybox
+        # buttons reset
+        self.stopbutton.place_forget()
+
+        self.button.place_forget()
+        self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
+                                    command=self.generate_solution, cursor="sizing", bg="lightgreen")
+        self.button.place(**GENERATE_SOLUTION_POS)
 
     def stop_algorithm(self) -> None:
         """
