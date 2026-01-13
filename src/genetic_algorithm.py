@@ -110,7 +110,8 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
-        print(f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
+        #print(
+            #f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
     else:
         print(f"Algorithm stopped - iteration limit reached")
     return population.best()
@@ -141,7 +142,7 @@ def genetic_algorithm_controller(gui):
                 gui.root.after(0, lambda: plt.close(gui.fig_population))
                 last_processed_iter = gui.extra_data["iterations"]
         time.sleep(0.5)
-        # print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
+        #print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
     else:
         gui.is_running = False
         gui.root.after(0, lambda: gui.do_when_finished())

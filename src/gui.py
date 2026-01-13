@@ -11,6 +11,7 @@ import file_handling
 import generate_graphs
 import organisms_and_population
 import problem_description
+
 from genetic_algorithm import *
 from gui_config import *
 
