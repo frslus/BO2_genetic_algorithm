@@ -100,6 +100,7 @@ class TransportProblemObject:
                 if RAPORT:
                     print(is_transported, j, location, "!=", self.__packages_list[i]["city_to"])
                 # /DEBUGGING
+                #print("not in city_to")
                 return (INF, 0) if return_date_margin else INF
             time_margin += self.__packages_list[i]["date_delivery"] - arrived_date
         # DEBUGGING
@@ -115,6 +116,7 @@ class TransportProblemObject:
                     if RAPORT:
                         print(t, location, storage_matrix[t][location], capacities[location])
                     # /DEBUGGING
+                    #print("capacity")
                     return (INF, 0) if return_date_margin else INF
         return (cost, time_margin) if return_date_margin else cost
 
@@ -144,6 +146,7 @@ class TransportProblemObject:
                         else:
                             if self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]][
                                 chromosome[-1][2]]["time"] != INF:
+
                                 date += ceil(
                                     self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
                                     [chromosome[-1][2]]["time"])
@@ -167,9 +170,8 @@ class TransportProblemObject:
                 else:
                     if self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]][chromosome[-1][2]][
                         "time"] != INF:
-                        date += ceil(
-                            self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
-                            [chromosome[-1][2]]["time"])
+                        date += ceil(self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
+                                     [chromosome[-1][2]]["time"])
                     else:
                         date += 2 * self.__timespan
             else:

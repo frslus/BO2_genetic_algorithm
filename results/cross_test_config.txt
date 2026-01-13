@@ -1,0 +1,22 @@
+# graph
+GRAPH_FILE = "../data/graph20.csv"
+
+# packages
+PACKAGES_FILE = "../data/packages20_graph20.csv"
+
+# population
+CREATE_POPULATION = False
+POPULATION_FILE_READ = "../data/packages20_graph20_population.csv"
+POPULATION_FILE_SAVE = "../data/foo.csv"
+POPULATION_SIZE = 100
+
+# params
+config = {
+    "population_size": POPULATION_SIZE,
+    "total_iterations": 200,
+    "stagnation_iterations": 30,
+    "parent_percent": 0.3,
+    "mutation_chance": 0.1,
+    "selection_type": "tournament",
+    "crossing_types": [?],
+    "mutation_types": ["city", "date", "transit_mode", "new_gene", "delete_gene"]
