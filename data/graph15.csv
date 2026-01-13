@@ -2,6 +2,23 @@ cities_number
 15
 cities
 city;x;y;capacity;has_airport
+<<<<<<< HEAD
+0;717;97;10;True
+1;371;856;14;True
+2;445;202;18;True
+3;300;936;12;True
+4;515;890;14;True
+5;521;459;12;True
+6;514;121;19;True
+7;434;772;18;True
+8;503;582;10;True
+9;300;752;10;True
+10;315;119;16;True
+11;634;374;13;False
+12;966;166;14;True
+13;401;927;17;False
+14;812;859;16;False
+=======
 0;575;372;10;True
 1;21;23;12;True
 2;817;976;15;True
@@ -17,6 +34,7 @@ city;x;y;capacity;has_airport
 12;427;831;13;True
 13;243;384;14;False
 14;589;495;10;False
+>>>>>>> evaluate
 distance
 cost
 city;0;1;2;3;4;5;6;7;8;9;10;11;12;13;14

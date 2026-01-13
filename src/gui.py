@@ -77,6 +77,7 @@ class GUI:
         self.fig_cost = None
         self.fig_time = None
         self.fig_population = None
+        self.package_routes = [self.draw_map()]
 
         # graphs
         self.canvas = {name: FigureCanvasTkAgg() for name in FIGURE_LAYERS}
@@ -251,6 +252,230 @@ class GUI:
         self.graphbuttons[0].place(**SOL_BUTTON_POS)
         self.graphbuttons[1].place(**CITY_BUTTON_POS)
 
+    # TODO: add function creating figure
+    def update_cost_graph(self) -> None:
+        """
+        Plot given figure object as cost graph
+        :param fig: matplotlib figure containing graph
+        :return: None
+        """
+        fig = self.create_test_figure() if self.fig_cost is None else self.fig_cost
+
+        self.canvas['cost'].get_tk_widget().place_forget()
+        self.canvas['cost'] = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas['cost'].get_tk_widget().place(**COST_GRAPH_POS)
+
+    def update_population_graph(self) -> None:
+        """
+        Plot given figure object as population graph
+        :param fig: matplotlib figure containing graph
+        :return: None
+        """
+        fig = self.create_test_figure() if self.fig_population is None else self.fig_population
+
+        self.canvas['population'].get_tk_widget().place_forget()
+        self.canvas['population'] = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas['population'].get_tk_widget().place(**POPULATION_GRAPH_POS)
+
+    def update_time_graph(self) -> None:
+        """
+        Plot given figure object as time graph
+        :param fig: matplotlib figure containing graph
+        :return: None
+        """
+        fig = self.create_test_figure() if self.fig_time is None else self.fig_time
+
+        self.canvas['time'].get_tk_widget().place_forget()
+        self.canvas['time'] = FigureCanvasTkAgg(fig, master=self.root)
+        # self.canvas_time.get_tk_widget().place(relx= 0.1, rely=0.1)
+        self.canvas['time'].get_tk_widget().place(**TIME_GRAPH_POS)
+
+        # creating the Matplotlib toolbar
+        # toolbar = NavigationToolbar2Tk(self.canvas_time, self.root)
+        # toolbar.update()
+
+    def create_test_figure(self, x=None, y=None) -> Figure:
+        """
+        DEBUG USE ONLY. Create an example graph
+        :param x: x axis data as an iter
+        :param y: y axis data as an iter. Must be same length as x
+        :return: example graph as a plt Figure
+        """
+        x = [i for i in range(20)] if x is None else x
+        y = [(i ** 2 - 15 * i) for i in x] if y is None else y
+
+        fig = Figure(figsize=(10, 10), dpi=100)
+        plot1 = fig.add_subplot(111)
+        plot1.plot(x, y)
+
+        return fig
+
+    def draw_graphs(self) -> None:
+        """
+        Draw figures from self.extra_data
+        :return: Cost figure, Population figure, Time figure
+        """
+        # self.extra data required
+        # variables
+        vx = [elem for elem in range(self.extra_data["iterations"])]
+
+        # cost graph
+        fig_cost, ax_cost = plt.subplots()
+        vy1 = self.extra_data["best_overall"][:]
+        vy2 = self.extra_data["mean_in_iter"][:]
+        ax_cost.plot(vx, vy1,"r")
+        ax_cost.plot(vx, vy2,"b")
+        ax_cost.set_xlabel("Iteracja")
+        ax_cost.set_ylabel("Wartość funkcji celu")
+        ax_cost.set_title("Średnia i najlepsza wartość funkcji celu w danej iteracji")
+        ax_cost.grid(True,color=(0.7, 0.7, 0.7))
+        ax_cost.set_xlim(0,self.extra_data["iterations"])
+        ax_cost.legend(["Najlepsza wartość", "Średnia wartość"],loc="upper right")
+
+        # time margins graph
+        fig_time, ax_time = plt.subplots()
+        vy1 = self.extra_data["time_margin"][:]
+        ax_time.plot(vx, vy1,"g")
+        ax_time.set_xlabel("Iteracja")
+        ax_time.set_ylabel("Terminowość")
+        ax_time.set_title("Terminowość najlepszego rozwiązania")
+        ax_time.grid(True, color=(0.7, 0.7, 0.7))
+
+        # alive percent of new generation graph
+        fig_population, ax_population = plt.subplots()
+        vy1 = [100 * elem for elem in self.extra_data["alive_percent"]]
+        ax_population.plot(vx, vy1, "m")
+        ax_population.set_xlabel("Iteracja")
+        ax_population.set_ylabel("%")
+        ax_population.set_title("Procent organizmów spełniających ograniczenia")
+        ax_population.grid(True, color=(0.7, 0.7, 0.7))
+
+        self.fig_cost = fig_cost
+        self.fig_time = fig_time
+        self.fig_population = fig_population
+
+    def draw_package_routes(self):
+        if self.best is None:
+            return
+        routes = []
+        for i, ch in enumerate(self.best):
+            print(ch)
+            fig_route, ax_route = plt.subplots()
+            if self.TPO.graph is None:
+                return
+            cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
+            vx1 = [cities_data[self.TPO.list[i]["city_from"]][0]] + [cities_data[gene.city_to][0] for gene in ch]
+            vy1 = [cities_data[self.TPO.list[i]["city_from"]][1]] + [cities_data[gene.city_to][1] for gene in ch]
+            ax_route.plot(vx1, vy1, "b")
+            vx2 = [cities_data[elem][0] for elem in cities_data]
+            vy2 = [cities_data[elem][1] for elem in cities_data]
+            ax_route.plot(vx2, vy2, "ro")
+            delta_x = max(vx2) - min(vx2)
+            delta_y = max(vy2) - min(vy2)
+            for elem in cities_data:
+                ax_route.text(cities_data[elem][0] + delta_x / 40, cities_data[elem][1] - delta_y / 40, elem)
+            labels = [(gene.mode_of_transit, gene.date) for gene in ch]
+            for j in range(len(ch)):
+                ax_route.text((vx1[j] + vx1[j + 1]) / 2 + delta_x / 40, (vy1[j] + vy1[j + 1]) / 2 - delta_y / 40, labels[j])
+            ax_route.set_xlabel("Współrzędna x")
+            ax_route.set_ylabel("Współrzędna y")
+            ax_route.set_title(f"Przesyłka {i + 1}")
+            plt.close(fig_route)
+            routes.append(fig_route)
+        self.package_routes = routes
+
+    def draw_map(self, return_ax: bool = False):
+        fig_map, ax_map = plt.subplots()
+        if self.TPO.graph is None:
+            return fig_map
+        cities_data = {elem[0]: (elem[1]["x"], elem[1]["y"]) for elem in self.TPO.graph.nodes(data=True)}
+        vx = [cities_data[elem][0] for elem in cities_data]
+        vy = [cities_data[elem][1] for elem in cities_data]
+        delta_x = max(vx) - min(vx)
+        delta_y = max(vy) - min(vy)
+        for elem in cities_data:
+            ax_map.text(cities_data[elem][0] + delta_x / 40, cities_data[elem][1] - delta_y / 40, elem)
+        ax_map.plot(vx, vy, "ro")
+        ax_map.set_xlabel("Współrzędna x")
+        ax_map.set_ylabel("Współrzędna y")
+        fig_map.show()
+        return fig_map, ax_map if return_ax else fig_map
+
+    def update_graphs(self) -> None:
+        """
+        Update graphs in GUI with given figures
+        :param fig_cost: new cost graph
+        :param fig_population: new population graph
+        :param fig_time: new time graph
+        :return: None
+        """
+        self.update_cost_graph()
+        self.update_time_graph()
+        self.update_population_graph()
+
+    def clear_graphs(self) -> None:
+        """
+        clear algorithm iteration graphs
+        :return: None
+        """
+        for _, graph in self.canvas.items():
+            graph.get_tk_widget().place_forget()
+
+    def update_city_graph(self, fig: Figure = None) -> None:
+        """
+        Update the city graph (graph representation of cities with connections) in GUI with given figures
+        :param fig: matplotlib figure containing city graph
+        :return: None
+        """
+        fig = self.create_test_figure() if fig is None else fig
+
+        self.canvas["city_graph"].get_tk_widget().place_forget()
+        self.canvas["city_graph"] = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas["city_graph"].get_tk_widget().place(**CITY_GRAPH_POS)
+
+    def clear_city_graph(self) -> None:
+        """
+        Clear city graph from GUI
+        :return: None
+        """
+        self.canvas["city_graph"].get_tk_widget().place_forget()
+
+    def show_city_graph(self) -> None:
+        """
+        Choose city graph as the one shown in the GUI
+        :return:
+        """
+        self.leftarrow.place(**LEFTARROW_POS)
+        self.rightarrow.place(**RIGHTARROW_POS)
+        self.clear_graphs()
+        self.update_city_graph()
+
+    def show_graphs(self) -> None:
+        """
+        Choose solution graphs as the one shown in the GUI
+        :return:
+        """
+        self.leftarrow.place_forget()
+        self.rightarrow.place_forget()
+        self.clear_city_graph()
+        self.update_graphs()
+
+    def show_prev_package(self) -> None:
+        """
+        Show the previous package in an iteration from self.extra_data
+        :return: None
+        """
+        self.cur_package_id -= 1
+        self.update_city_graph(self.package_routes[self.cur_package_id])
+
+    def show_next_package(self) -> None:
+        """
+        Show the next package in an iteration from self.extra_data
+        :return: None
+        """
+        self.cur_package_id += 1
+        self.update_city_graph(self.package_routes[self.cur_package_id])
+
     # menu handling
     def create_full_menu(self) -> None:
         """
@@ -320,6 +545,7 @@ class GUI:
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
             self.TPO.reload_graph(path.name)
+            self.fig_map = self.draw_map()
         except(AttributeError):
             return
 
@@ -355,7 +581,7 @@ class GUI:
         path = tk.filedialog.askopenfile(mode='r', title="Wybierz populację",
                                          filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
         try:
-            self.population = organisms_and_population.load_population_from_file(path.name)
+            self.population = Population(organisms_and_population.load_population_from_file(path.name))
         except(AttributeError):
             return
 
