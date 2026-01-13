@@ -83,10 +83,8 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
     # main algorithm
     best_score = population.best().cost()
     best_score_iter = 0
-    print("xD")
     for i in range(total_iterations):
         if run_flag is not None and not run_flag[0]:
-            print("break executed")
             break
         selection = population.selection(selection_type, parent_percent)
         alive_percent = population.reproduction(selection, crossing_types, mutation_types, mutation_chance, True)
@@ -110,8 +108,6 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
-        #print(
-            #f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
     else:
         print(f"Algorithm stopped - iteration limit reached")
     return population.best()
@@ -129,9 +125,7 @@ def genetic_algorithm_controller(gui):
     while gui.genetic_thread.is_alive():
         if not gui.is_running:
             run_flag[0] = False
-            print("xD1", run_flag)
             gui.genetic_thread.join()
-            print("xD2")
             break
         with gui.extra_data_lock:
             if "iterations" in gui.extra_data and last_processed_iter < gui.extra_data["iterations"]:
@@ -142,9 +136,7 @@ def genetic_algorithm_controller(gui):
                 gui.root.after(0, lambda: plt.close(gui.fig_population))
                 last_processed_iter = gui.extra_data["iterations"]
         time.sleep(0.5)
-        # print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
     else:
         gui.is_running = False
         gui.root.after(0, lambda: gui.draw_package_routes())
         gui.root.after(0, lambda: gui.do_when_finished())
-    print(gui.best.cost())

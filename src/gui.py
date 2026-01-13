@@ -694,6 +694,7 @@ class GUI:
         if self.is_running or not messagebox.askyesno(title="Wygeneruj rozwiązanie",
                                                       message="Czy na pewno wygenerować rozwiązanie?"):
             return
+        self.population.link_problem(self.TPO)
 
         # GUI running indicators
         self.button.place_forget()

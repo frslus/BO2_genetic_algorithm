@@ -417,7 +417,6 @@ class Population:
     """
 
     def __init__(self, organisms_list: list[Organism] | str):
-        # TODO: allow for argumentless init
         self.__organisms = []
         if isinstance(organisms_list, str):
             organisms_list = load_population_from_file(organisms_list)
@@ -520,7 +519,6 @@ class Population:
                     pool -= tickets[organism2]
                     tickets[organism2] = 0
                     pairs.append((organism1, organism2))
-                # print(pairs)
             case SelectionType.RANKING:
                 population_copy.sort(key=lambda x: x[1].cost())
                 population_copy = population_copy[:parents_number]
@@ -544,23 +542,14 @@ class Population:
                         groups_ready.append(full_group)
                 for i in range(parents_number // 2):
                     organism1 = groups_ready[2 * i][0]
-                    # print(organism1[0], organism1[1].cost())
                     for j in range(1, len(groups_ready[2 * i])):
-                        # print(groups_ready[2 * i][j][0], groups_ready[2 * i][j][1].cost())
                         if organism1[1].cost() > groups_ready[2 * i][j][1].cost():
                             organism1 = groups_ready[2 * i][j]
-                    # print(organism1[0])
-                    # print()
                     organism2 = groups_ready[2 * i + 1][0]
-                    # print(organism2[0], organism2[1].cost())
                     for j in range(1, len(groups_ready[2 * i + 1])):
-                        # print(groups_ready[2 * i + 1][j][0], groups_ready[2 * i + 1][j][1].cost())
                         if organism2[1].cost() > groups_ready[2 * i + 1][j][1].cost():
                             organism2 = groups_ready[2 * i + 1][j]
                     pairs.append((organism1[0], organism2[0]))
-                    # print(organism2[0])
-                    # print()
-                # print(pairs)
             case _:
                 raise TypeError(f"'{selection_type}' is not correct selection type")
         return pairs
