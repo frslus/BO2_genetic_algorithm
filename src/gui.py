@@ -718,8 +718,8 @@ class GUI:
         self.control_thread = threading.Thread(target=genetic_algorithm_controller, args=[self])
         self.control_thread.start()
 
-        #post algo entrybox reset
-        #TODO: if has_finished:
+    def do_when_finished(self) -> None:
+        # post algo entrybox reset
         for i,entrybox in enumerate(self.textboxes):
             entrybox.grid_forget()
             entrybox = tk.Entry(self.textbox_grid,textvariable= self.textvars[i],font=(self.font, self.font_size2))

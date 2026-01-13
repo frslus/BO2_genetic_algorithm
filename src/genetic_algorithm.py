@@ -131,4 +131,5 @@ def genetic_algorithm_controller(gui):
         #print("iterations: ", last_processed_iter, gui.genetic_thread.is_alive(), gui.is_running)
     else:
         gui.is_running = False
+        gui.root.after(0, lambda: gui.do_when_finished())
     print(gui.best.cost())
