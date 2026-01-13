@@ -39,7 +39,7 @@ GENERATED_CHROMOSOME_MAX_LENGTH = 4
 PACKAGES_FILE = "../data/packages20_graph20.csv"
 
 # population
-CREATE_POPULATION = False
+CREATE_POPULATION = True
 POPULATION_FILE_READ = "../data/packages20_graph20_population.csv"
 POPULATION_FILE_SAVE = "../data/foo.csv"
 POPULATION_SIZE = 100
@@ -68,7 +68,7 @@ config = {
 extra_data = {}
 EXTRA_DATA_PATH = "../results/extra_data0.csv"
 HISTORY_PATH = "../results/history.csv"
-NAME = "t6_15"
+NAME = "t7_100"
 
 # algorithm
 tpo = TransportProblemObject(GRAPH_FILE, PACKAGES_FILE)
@@ -94,4 +94,4 @@ for _ in range(REPEAT):
     print(best)
 
     save_extra_data(extra_data, EXTRA_DATA_PATH)
-    save_score(HISTORY_PATH, NAME, 20, time_end - time_start)
+    save_score(HISTORY_PATH, NAME, 100, time_end - time_start)
