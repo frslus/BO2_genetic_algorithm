@@ -1,8 +1,7 @@
 # libraries
 import tkinter as tk
-from json import dumps, dump, load, loads
+from json import dumps, dump, load
 from tkinter import messagebox
-from ast import literal_eval
 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
@@ -378,7 +377,7 @@ class GUI:
             with open(path.name, mode="r", newline="", encoding="utf-8") as file:
                 self.config = load(file)
                 print(type(self.config))
-                #self.config["mutation_types"] = load(self.config["mutation_types"])
+                # self.config["mutation_types"] = load(self.config["mutation_types"])
         except(AttributeError):
             return
 
@@ -513,7 +512,6 @@ class GUI:
                 dump(config, file)
         except(AttributeError):
             return
-
 
     # algorithm parameters selection
     def place_all_selectors(self) -> None:
@@ -660,18 +658,20 @@ class GUI:
 
         # set textfields
         self.textvars[0].set(config["population_size"])
-        self.textvars[1].set(str(float(config["parent_percent"]*100)))
-        self.textvars[2].set(str(float(config["mutation_chance"]*100)))
+        self.textvars[1].set(str(float(config["parent_percent"] * 100)))
+        self.textvars[2].set(str(float(config["mutation_chance"] * 100)))
         self.textvars[3].set(config["stagnation_iterations"])
         self.textvars[4].set(config["total_iterations"])
 
         # selection checkbox
-        self.checktype['selection'].set(1 if config["selection_type"] == "tournament" else (2 if config["selection_type"] == "ranking" else 3))
+        self.checktype['selection'].set(
+            1 if config["selection_type"] == "tournament" else (2 if config["selection_type"] == "ranking" else 3))
 
         # crossing checkbox
-        self.checktype['crossing'].set(1 if config["crossing_types"] == "one cut" else (2 if config["crossing_types"] == "random_cuts" else 3))
+        self.checktype['crossing'].set(
+            1 if config["crossing_types"] == "one cut" else (2 if config["crossing_types"] == "random_cuts" else 3))
 
-        #mutation checkbox
+        # mutation checkbox
         mutations = config["mutation_types"]
         mutations[0].set(True if "city" in mutations[0] else False)
         mutations[1].set(True if "date" in mutations[1] else False)
@@ -703,9 +703,10 @@ class GUI:
                                     command=self.stop_algorithm, cursor="pirate", bg="red")
         self.stopbutton.place(**STOP_SOLUTION_POS)
 
-        for i,entrybox in enumerate(self.textboxes):
+        for i, entrybox in enumerate(self.textboxes):
             entrybox.grid_forget()
-            entrybox = tk.Entry(self.textbox_grid,textvariable= self.textvars[i],font=(self.font, self.font_size2),state=tk.DISABLED)
+            entrybox = tk.Entry(self.textbox_grid, textvariable=self.textvars[i], font=(self.font, self.font_size2),
+                                state=tk.DISABLED)
             entrybox.grid(row=i, column=1, sticky=tk.W + tk.E)
             self.textboxes[i] = entrybox
 
@@ -719,18 +720,25 @@ class GUI:
         self.control_thread.start()
 
     def do_when_finished(self) -> None:
-        # post algo entrybox reset
-        for i,entrybox in enumerate(self.textboxes):
+        """
+        Update the gui when the algorithm stopped/finished working
+        :return: None
+        """
+        self.is_running = False
+
+        # entrybox reset
+        for i, entrybox in enumerate(self.textboxes):
             entrybox.grid_forget()
-            entrybox = tk.Entry(self.textbox_grid,textvariable= self.textvars[i],font=(self.font, self.font_size2))
+            entrybox = tk.Entry(self.textbox_grid, textvariable=self.textvars[i], font=(self.font, self.font_size2))
             entrybox.grid(row=i, column=1, sticky=tk.W + tk.E)
             self.textboxes[i] = entrybox
+
         # buttons reset
         self.stopbutton.place_forget()
 
         self.button.place_forget()
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
-                                    command=self.generate_solution, cursor="sizing", bg="lightgreen")
+                                command=self.generate_solution, cursor="sizing", bg="lightgreen")
         self.button.place(**GENERATE_SOLUTION_POS)
 
     def stop_algorithm(self) -> None:
@@ -741,7 +749,7 @@ class GUI:
         if not self.is_running or not messagebox.askyesno(title="STOP", message="Czy na pewno zatrzymać rozwiązanie?"):
             return
 
-        self.is_running = False
+        self.do_when_finished()
 
     # graph handling
     def update_cost_graph(self) -> None:
