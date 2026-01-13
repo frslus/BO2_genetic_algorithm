@@ -712,6 +712,7 @@ class GUI:
         self.stopbutton = tk.Button(self.root, text="STOP", font=(self.font, self.font_size2),
                                     command=self.stop_algorithm, cursor="pirate", bg="red")
         self.stopbutton.place(**STOP_SOLUTION_POS)
+        self.checkbox.place_forget()
 
         #if self.is_res_printed.get() == 1:
             # TODO: implement printing behavior
@@ -753,6 +754,12 @@ class GUI:
         self.button = tk.Button(self.root, text="Wygeneruj rozwiązanie", font=(self.font, self.font_size2),
                                 command=self.generate_solution, cursor="sizing", bg="lightgreen")
         self.button.place(**GENERATE_SOLUTION_POS)
+
+        #checkbox reset
+        self.checkbox.place_forget()
+        self.checkbox = tk.Checkbutton(self.root, text="Wypisz wyniki", font=(self.font, self.font_size2),
+                                       variable=self.is_res_printed)
+        self.checkbox.place(**CHECKBOX_PRINT_POS)
 
     def stop_algorithm(self) -> None:
         """
