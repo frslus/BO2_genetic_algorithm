@@ -25,15 +25,13 @@ def generate_population(problem: TransportProblemObject, population_size: int, a
         if new_organism.cost() == INF:
             if len(dead_organisms) < population_size - alive_number:
                 dead_organisms.append(new_organism)
-            # print("Dead")
         else:
             alive_organisms.append(new_organism)
-            print("alive")
     population = Population(alive_organisms + dead_organisms)
     return population
 
 
-def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, extra_data_lock=None,
+def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, extra_data_lock = None,
                       extra_data: dict | None = None, initial_population: Population | None = None,
                       run_flag: list | None = None) -> Organism:
     if isinstance(config_file, str):
@@ -112,7 +110,8 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
         if i - best_score_iter >= stagnation_iterations:
             print(f"Algorithm stopped - too many iterations without improvement")
             break
-        print(f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
+        #print(
+            #f"Iteration {i}: mean_cost: {population.mean_cost()}, best: {population.best().cost()}, best_iter: {best_score_iter}")
     else:
         print(f"Algorithm stopped - iteration limit reached")
     return population.best()
@@ -121,8 +120,6 @@ def genetic_algorithm(problem: TransportProblemObject, config_file: str | dict, 
 def wrapped_genetic_algorithm(gui, run_flag):
     gui.best = genetic_algorithm(gui.TPO, gui.config, gui.extra_data_lock,
                                  gui.extra_data, gui.population, run_flag)
-    print("DEAD 2")
-
 
 def genetic_algorithm_controller(gui):
     run_flag = [True]
@@ -149,5 +146,5 @@ def genetic_algorithm_controller(gui):
     else:
         gui.is_running = False
         gui.root.after(0, lambda: gui.draw_package_routes())
+        gui.root.after(0, lambda: gui.do_when_finished())
     print(gui.best.cost())
-    print("DEAD 1")
