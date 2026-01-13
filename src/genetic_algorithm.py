@@ -27,6 +27,7 @@ def generate_population(problem: TransportProblemObject, population_size: int, a
                 dead_organisms.append(new_organism)
         else:
             alive_organisms.append(new_organism)
+            print("alive")
     population = Population(alive_organisms + dead_organisms)
     return population
 

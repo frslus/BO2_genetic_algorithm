@@ -69,11 +69,11 @@ class TransportProblemObject:
                         if RAPORT:
                             print(i, j, t, organism[i][j])
                         # /DEBUGGING
-                        return (INF,0) if return_date_margin else INF
+                        return (INF, 0) if return_date_margin else INF
                     if organism[i][j].date == t:
                         is_transported = True
                         if location == organism[i][j].city_to:
-                            return (INF,0) if return_date_margin else INF
+                            return (INF, 0) if return_date_margin else INF
                         transport_end = organism[i][j].date + self.__cities_graph[location][organism[i][j].city_to][
                             organism[i][j].mode_of_transit]["time"]
                         cost += self.__cities_graph[location][organism[i][j].city_to][
@@ -100,7 +100,8 @@ class TransportProblemObject:
                 if RAPORT:
                     print(is_transported, j, location, "!=", self.__packages_list[i]["city_to"])
                 # /DEBUGGING
-                return (INF,0) if return_date_margin else INF
+                #print("not in city_to")
+                return (INF, 0) if return_date_margin else INF
             time_margin += self.__packages_list[i]["date_delivery"] - arrived_date
         # DEBUGGING
         if RAPORT:
@@ -115,7 +116,8 @@ class TransportProblemObject:
                     if RAPORT:
                         print(t, location, storage_matrix[t][location], capacities[location])
                     # /DEBUGGING
-                    return (INF,0) if return_date_margin else INF
+                    #print("capacity")
+                    return (INF, 0) if return_date_margin else INF
         return (cost, time_margin) if return_date_margin else cost
 
     def generate_solution(self, max_len: int = 3, addition_chance: float = 0.3):
@@ -135,11 +137,21 @@ class TransportProblemObject:
                             local_cities.remove(chromosome[-1][0])
                         date = chromosome[-1][1] + randint(0, 1)
                         if len(chromosome) > 1:
-                            date += ceil(self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]]
-                                         [chromosome[-1][2]]["time"])
+                            if self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]][chromosome[-1][2]][
+                                "time"] != INF:
+                                date += ceil(self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]]
+                                             [chromosome[-1][2]]["time"])
+                            else:
+                                date += 2 * self.__timespan
                         else:
-                            date += ceil(self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
-                                         [chromosome[-1][2]]["time"])
+                            if self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]][
+                                chromosome[-1][2]]["time"] != INF:
+
+                                date += ceil(
+                                    self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
+                                    [chromosome[-1][2]]["time"])
+                            else:
+                                date += 2 * self.__timespan
                     else:
                         if self.__packages_list[i]["city_from"] in local_cities:
                             local_cities.remove(self.__packages_list[i]["city_from"])
@@ -150,12 +162,18 @@ class TransportProblemObject:
             if chromosome:
                 date = chromosome[-1][1] + randint(0, 1)
                 if len(chromosome) > 1:
-                    date += ceil(self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]]
-                                 [chromosome[-1][2]]["time"])
+                    if self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]][chromosome[-1][2]]["time"] != INF:
+                        date += ceil(self.__cities_graph[chromosome[-1][0]][chromosome[-2][0]]
+                                     [chromosome[-1][2]]["time"])
+                    else:
+                        date += 2 * self.__timespan
                 else:
-                    date += ceil(
-                        self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
-                        [chromosome[-1][2]]["time"])
+                    if self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]][chromosome[-1][2]][
+                        "time"] != INF:
+                        date += ceil(self.__cities_graph[chromosome[-1][0]][self.__packages_list[i]["city_from"]]
+                                     [chromosome[-1][2]]["time"])
+                    else:
+                        date += 2 * self.__timespan
             else:
                 date = self.__packages_list[i]["date_ready"]
             mode = modes_of_transit[randint(0, len(modes_of_transit) - 1)]

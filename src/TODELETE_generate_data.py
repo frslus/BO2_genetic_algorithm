@@ -101,7 +101,7 @@ assign_car_costs(graph, **kwargs)
 
 # 7. decide on velocities
 # velocities = {"plane": 600, "car": 100, "train": 60}
-velocities = {"plane": 1500, "car": 250, "train": 100}
+velocities = {"plane": 1500, "car": 550, "train": 100}
 
 # 8. assign times (auto)
 modes_of_transit = ("plane", "car", "train")
@@ -110,8 +110,8 @@ for layer in modes_of_transit:
     assign_times(graph, layer, velocities[layer])
 
 # 9. generate package list
-length = 10
-kwargs = {"length": length, "weight": (3, 7), "timespan": 16, "min_time": 3}
+length = 25
+kwargs = {"length": length, "weight": (3, 7), "timespan": 120, "min_time": 3}
 package_list = generate_package_list(graph, **kwargs)
 print(package_list)
 
