@@ -1,7 +1,8 @@
 # libraries
 import tkinter as tk
-from json import dumps, dump, load
+from json import dumps, dump, load, loads
 from tkinter import messagebox
+from ast import literal_eval
 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
@@ -202,7 +203,7 @@ class GUI:
         # textbox
         for i in range(5):
             textbox = self.textboxes[i]
-            textbox.place_forget()
+            textbox.grid_forget()
             # textbox = tk.Text(self.textbox_grid, height=1, width=5, font=(self.font, self.font_size1))
             textbox = tk.Entry(self.textbox_grid, textvariable=self.textvars[i], font=(self.font, self.font_size1))
             textbox.grid(row=i, column=1, sticky=tk.W + tk.E)
@@ -358,6 +359,32 @@ class GUI:
         except(AttributeError):
             return
 
+    def load_config(self) -> None:
+        """
+        Load view settings config from .json
+        :return: None
+        """
+        # popup
+        if not messagebox.askyesno(title="Załaduj",
+                                   message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
+            return
+
+        # filewindow
+        path = tk.filedialog.askopenfile(mode='r', title="Wybierz konfigurację",
+                                         filetypes=[("json files", "*.json"), ("All files", "*.*")])
+
+        # .json to dict
+        try:
+            with open(path.name, mode="r", newline="", encoding="utf-8") as file:
+                self.config = load(file)
+                print(type(self.config))
+                #self.config["mutation_types"] = load(self.config["mutation_types"])
+        except(AttributeError):
+            return
+
+        self.update_gui_config()
+        return
+
     def generate_graph(self) -> None:
         """
         Handle generating random graph from generate_graph.create_complete_graph
@@ -487,28 +514,6 @@ class GUI:
         except(AttributeError):
             return
 
-    def load_config(self) -> None:
-        """
-        Load view settings config from .json
-        :return: None
-        """
-        # popup
-        if not messagebox.askyesno(title="Załaduj",
-                                   message="Czy na pewno chcesz załadować konfigurację z pliku?\nAktualne ustawienia zostaną nadpisane!"):
-            return
-
-        # filewindow
-        path = tk.filedialog.askopenfile(mode='r', title="Wybierz konfigurację",
-                                         filetypes=[("json files", "*.json"), ("All files", "*.*")])
-
-        # .json to dict
-        try:
-            with open(path.name, mode="r", newline="", encoding="utf-8") as file:
-                self.config = load(file)
-        except(AttributeError):
-            return
-
-        return
 
     # algorithm parameters selection
     def place_all_selectors(self) -> None:
@@ -647,6 +652,35 @@ class GUI:
 
         return
 
+    def update_gui_config(self) -> None:
+        """
+        Update the gui representation of the config from data from self.config
+        """
+        config = self.config
+
+        # set textfields
+        self.textvars[0].set(config["population_size"])
+        self.textvars[1].set(str(float(config["parent_percent"]*100)))
+        self.textvars[2].set(str(float(config["mutation_chance"]*100)))
+        self.textvars[3].set(config["stagnation_iterations"])
+        self.textvars[4].set(config["total_iterations"])
+
+        # selection checkbox
+        self.checktype['selection'].set(1 if config["selection_type"] == "tournament" else (2 if config["selection_type"] == "ranking" else 3))
+
+        # crossing checkbox
+        self.checktype['crossing'].set(1 if config["crossing_types"] == "one cut" else (2 if config["crossing_types"] == "random_cuts" else 3))
+
+        #mutation checkbox
+        mutations = config["mutation_types"]
+        mutations[0].set(True if "city" in mutations[0] else False)
+        mutations[1].set(True if "date" in mutations[1] else False)
+        mutations[2].set(True if "transit_mode" in mutations[2] else False)
+        mutations[3].set(True if "new_gene" in mutations[3] else False)
+        mutations[4].set(True if "delete_gene" in mutations[4] else False)
+
+        return
+
     # algorithm runtime
     def generate_solution(self) -> None:
         """
@@ -669,8 +703,11 @@ class GUI:
                                     command=self.stop_algorithm, cursor="pirate", bg="red")
         self.stopbutton.place(**STOP_SOLUTION_POS)
 
-        for entrybox in self.textboxes:
-            entrybox
+        for i,entrybox in enumerate(self.textboxes):
+            entrybox.grid_forget()
+            entrybox = tk.Entry(self.textbox_grid,textvariable= self.textvars[i],font=(self.font, self.font_size2),state=tk.DISABLED)
+            entrybox.grid(row=i, column=1, sticky=tk.W + tk.E)
+            self.textboxes[i] = entrybox
 
         # pre running prep
         self.is_running = True
@@ -680,6 +717,14 @@ class GUI:
         # start algorithm
         self.control_thread = threading.Thread(target=genetic_algorithm_controller, args=[self])
         self.control_thread.start()
+
+        #post algo entrybox reset
+        #TODO: if has_finished:
+        for i,entrybox in enumerate(self.textboxes):
+            entrybox.grid_forget()
+            entrybox = tk.Entry(self.textbox_grid,textvariable= self.textvars[i],font=(self.font, self.font_size2))
+            entrybox.grid(row=i, column=1, sticky=tk.W + tk.E)
+            self.textboxes[i] = entrybox
 
     def stop_algorithm(self) -> None:
         """
