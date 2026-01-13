@@ -1,10 +1,10 @@
 {
 "population_size": 100,
 "parent_percent": 0.3,
-"total_iterations": 100,
-"stagnation_iterations": 20,
+"total_iterations": 200,
+"stagnation_iterations": 30,
 "mutation_chance": 0.1,
-"selection_type": "roulette",
-"crossing_types": ["random_selection", "random_cuts"],
+"selection_type": "tournament",
+"crossing_types": ["random_selection"],
 "mutation_types": ["city", "date", "transit_mode", "new_gene", "delete_gene"]
 }

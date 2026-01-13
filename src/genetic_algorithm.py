@@ -140,3 +140,8 @@ def genetic_algorithm_controller(gui):
         gui.is_running = False
         gui.root.after(0, lambda: gui.draw_package_routes())
         gui.root.after(0, lambda: gui.do_when_finished())
+        gui.root.after(0, lambda: gui.draw_graphs(True))
+        gui.root.after(0, lambda: gui.update_graphs())
+        gui.root.after(0, lambda: plt.close(gui.fig_cost))
+        gui.root.after(0, lambda: plt.close(gui.fig_time))
+        gui.root.after(0, lambda: plt.close(gui.fig_population))

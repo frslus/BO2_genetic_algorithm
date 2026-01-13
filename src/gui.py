@@ -245,7 +245,7 @@ class GUI:
         self.button.place(**GENERATE_SOLUTION_POS)
         self.checkbox.place_forget()
         self.checkbox = tk.Checkbutton(self.root, text="Wypisz wyniki", font=(self.font, self.font_size2),
-                                variable=self.is_res_printed)
+                                       variable=self.is_res_printed)
         self.checkbox.place(**CHECKBOX_PRINT_POS)
 
         # graph button
@@ -714,8 +714,8 @@ class GUI:
         self.stopbutton.place(**STOP_SOLUTION_POS)
         self.checkbox.place_forget()
 
-        #if self.is_res_printed.get() == 1:
-            # TODO: implement printing behavior
+        # if self.is_res_printed.get() == 1:
+        # TODO: implement printing behavior
 
         for i, entrybox in enumerate(self.textboxes):
             entrybox.grid_forget()
@@ -755,7 +755,7 @@ class GUI:
                                 command=self.generate_solution, cursor="sizing", bg="lightgreen")
         self.button.place(**GENERATE_SOLUTION_POS)
 
-        #checkbox reset
+        # checkbox reset
         self.checkbox.place_forget()
         self.checkbox = tk.Checkbutton(self.root, text="Wypisz wyniki", font=(self.font, self.font_size2),
                                        variable=self.is_res_printed)
@@ -828,7 +828,7 @@ class GUI:
 
         return fig
 
-    def draw_graphs(self) -> None:
+    def draw_graphs(self, draw_cost=False) -> None:
         """
         Draw figures from self.extra_data
         :return: Cost figure, Population figure, Time figure
@@ -841,19 +841,23 @@ class GUI:
         fig_cost, ax_cost = plt.subplots()
         vy1 = self.extra_data["best_overall"][:]
         vy2 = self.extra_data["mean_in_iter"][:]
-        ax_cost.plot(vx, vy1,"r")
-        ax_cost.plot(vx, vy2,"b")
+        ax_cost.plot(vx, vy1, "r")
+        ax_cost.plot(vx, vy2, "b")
         ax_cost.set_xlabel("Iteracja")
         ax_cost.set_ylabel("Wartość funkcji celu")
         ax_cost.set_title("Średnia i najlepsza wartość funkcji celu w danej iteracji")
-        ax_cost.grid(True,color=(0.7, 0.7, 0.7))
-        ax_cost.set_xlim(0,self.extra_data["iterations"])
-        ax_cost.legend(["Najlepsza wartość", "Średnia wartość"],loc="upper right")
+        ax_cost.grid(True, color=(0.7, 0.7, 0.7))
+        ax_cost.set_xlim(0, self.extra_data["iterations"])
+        ax_cost.legend(["Najlepsza wartość", "Średnia wartość"], loc="upper right")
+        if draw_cost:
+            a = max(vy2)
+            b = min(vy1)
+            ax_cost.text(self.extra_data["iterations"] / 2, (a + b) / 2, f"Wynik: {self.best.cost()}")
 
         # time margins graph
         fig_time, ax_time = plt.subplots()
         vy1 = self.extra_data["time_margin"][:]
-        ax_time.plot(vx, vy1,"g")
+        ax_time.plot(vx, vy1, "g")
         ax_time.set_xlabel("Iteracja")
         ax_time.set_ylabel("Terminowość")
         ax_time.set_title("Terminowość najlepszego rozwiązania")
@@ -894,7 +898,8 @@ class GUI:
                 ax_route.text(cities_data[elem][0] + delta_x / 40, cities_data[elem][1] - delta_y / 40, elem)
             labels = [(gene.mode_of_transit, gene.date) for gene in ch]
             for j in range(len(ch)):
-                ax_route.text((vx1[j] + vx1[j + 1]) / 2 + delta_x / 40, (vy1[j] + vy1[j + 1]) / 2 - delta_y / 40, labels[j])
+                ax_route.text((vx1[j] + vx1[j + 1]) / 2 + delta_x / 40, (vy1[j] + vy1[j + 1]) / 2 - delta_y / 40,
+                              labels[j])
             ax_route.set_xlabel("Współrzędna x")
             ax_route.set_ylabel("Współrzędna y")
             ax_route.set_title(f"Przesyłka {i + 1}")
